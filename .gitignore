@@ -71,3 +71,7 @@ flake8_output.txt
 
 # ESP-IDF library 
 build
+
+# Config Files
+sdkconfig
+sdkconfig.old
