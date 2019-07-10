@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "soc/gpio_struct.h"
+#include "driver/gpio.h"
+#include "driver/mcpwm.h"
+
+#include "variables.h"
+#include "motor.h"
+
+#define GPIO_PWM0A_OUT 17   //Set GPIO 15 as PWM0A
+#define GPIO_PWM0B_OUT 16   //Set GPIO 16 as PWM0B
+
+#define GPIO_PWM1A_OUT 26
+#define GPIO_PWM1B_OUT 25
+
+#define GPIO_NSLEEP 33
+#define GPIO_OUTPUT_PIN_SEL (1ULL<<GPIO_NSLEEP)
+
+static void mcpwm_example_gpio_initialize()
+{
+    printf("initializing mcpwm gpio...\n");
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, GPIO_PWM0A_OUT);
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, GPIO_PWM0B_OUT);
+
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1A, GPIO_PWM1A_OUT);
+    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM1B, GPIO_PWM1B_OUT);
+}
+
+/**
+ * @brief motor moves in forward direction, with duty cycle = duty %
+ */
+static void brushed_motor_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle)
+{
+    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
+    mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle);
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
+}
+
+/**
+ * @brief motor moves in backward direction, with duty cycle = duty %
+ */
+static void brushed_motor_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle)
+{
+    mcpwm_set_signal_high(mcpwm_num, timer_num, MCPWM_OPR_B);
+    mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle);
+    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); 
+}
+
+/**
+ * @brief motor stop
+ */
+static void brushed_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
+{
+    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_A);
+    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
+}
+
+void TaskMotorDrive(void *arg)
+{
+
+    gpio_config_t io_conf;
+    //disable interrupt
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    //set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //bit mask of the pins that you want to set,e.g.GPIO18/19
+    io_conf.pin_bit_mask = (1ULL<<GPIO_NSLEEP);
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+    //disable pull-up mode
+    io_conf.pull_up_en = 0;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+    /* 省略 */
+
+    //1. mcpwm gpio initialization
+    mcpwm_example_gpio_initialize();
+
+    //2. initial mcpwm configuration
+    printf("Configuring Initial Parameters of mcpwm...\n");
+    mcpwm_config_t pwm_config;
+    pwm_config.frequency = 10*1000;    //frequency = 500Hz,
+    pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
+    pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
+    pwm_config.counter_mode = MCPWM_UP_COUNTER;
+    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
+    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);    //Configure PWM0A & PWM0B with above settings
+
+    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_1, &pwm_config);    //Configure PWM0A & PWM0B with above settings
+
+    while (1) {
+        // グローバル変数を直接加工しない
+        float duty[SIDE_NUM];
+        duty[RIGHT] = gMotorDuty[RIGHT];
+        duty[LEFT] = gMotorDuty[LEFT];
+
+        // Dutyを0~100にする
+        for(int side_i=0; side_i < SIDE_NUM; side_i++){
+            if(duty[side_i] < 0){
+                duty[side_i] = 0;
+            }else if(duty[side_i] > 100){
+                duty[side_i] = 100;
+            }
+        }
+
+        switch(gMotorDriveMode){
+            case MOTOR_STOP:
+                // ブレーキ
+                // nSLEEPをOFFにして、モータの電源ON
+                gpio_set_level(GPIO_NSLEEP, 1);
+                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_1);
+                break;
+
+            case MOTOR_FORWARD:
+                // 前進
+                gpio_set_level(GPIO_NSLEEP, 1);
+                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
+                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
+                break;
+
+            case MOTOR_BACKWARD:
+                // 後進
+                gpio_set_level(GPIO_NSLEEP, 1);
+                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
+                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
+                break;
+
+            case MOTOR_ROTATE_CW:
+                // 時計回り
+                gpio_set_level(GPIO_NSLEEP, 1);
+                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
+                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
+                break;
+
+            case MOTOR_ROTATE_CCW:
+                // 反時計回り
+                gpio_set_level(GPIO_NSLEEP, 1);
+                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
+                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
+                break;
+
+            case MOTOR_SLEEP:
+            default:
+                // nSLEEPをONにする
+                gpio_set_level(GPIO_NSLEEP, 0);
+                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
+                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_1);
+                break;
+        }
+
+        vTaskDelay(10 / portTICK_RATE_MS);
+    }
+}
+
