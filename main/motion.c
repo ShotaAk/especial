@@ -148,7 +148,7 @@ void TaskReadMotion(void *arg){
         gGyro[AXIS_Y] = get_gyro(spi, AXIS_Y);
         gGyro[AXIS_Z] = get_gyro(spi, AXIS_Z);
 
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 

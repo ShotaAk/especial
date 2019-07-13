@@ -84,7 +84,7 @@ void TaskReadEncoders(void *arg){
         gWheelAngle[LEFT] = getAngle(spi_l);
         gWheelAngle[RIGHT] = getAngle(spi_r);
 
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 

@@ -128,10 +128,10 @@ static void TaskMain(void *arg){
                     vTaskDelay(300 / portTICK_PERIOD_MS);
                     gIndicatorValue = 3;
                     vTaskDelay(300 / portTICK_PERIOD_MS);
-                    // motorTest(10);
+                    motorTest(30);
                     // goForward(10);
                     // turnBack(10);
-                    Maze();
+                    // Maze();
                 }
             }
 
@@ -143,6 +143,10 @@ static void TaskMain(void *arg){
                 gWallVoltage[WALL_SENS_FL],
                 gWallVoltage[WALL_SENS_FR],
                 gWallVoltage[WALL_SENS_R]);
+
+        // printf("encoder L:R %f:%f\n",gWheelAngle[LEFT], gWheelAngle[RIGHT]);
+
+        // printf("battery Voltage:%d\n", gBatteryVoltage);
         
         // motorTest(10);
 

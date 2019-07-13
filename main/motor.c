@@ -84,7 +84,7 @@ void TaskMotorDrive(void *arg)
     //2. initial mcpwm configuration
     printf("Configuring Initial Parameters of mcpwm...\n");
     mcpwm_config_t pwm_config;
-    pwm_config.frequency = 10*1000;    //frequency = 500Hz,
+    pwm_config.frequency = 100*1000;    //frequency = 100kHz,
     pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
     pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
@@ -154,7 +154,7 @@ void TaskMotorDrive(void *arg)
                 break;
         }
 
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(1 / portTICK_RATE_MS);
     }
 }
 

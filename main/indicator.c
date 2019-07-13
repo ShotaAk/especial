@@ -50,7 +50,7 @@ void TaskIndicator(void *arg){
             }
 
             ledToggle = !ledToggle;
-            vTaskDelay(300 / portTICK_PERIOD_MS);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
         }
     }
 }
