@@ -43,5 +43,7 @@ extern float gMotorDuty[SIDE_NUM];
 
 extern int gWallVoltage[WALL_SENS_NUM];
 
+extern float gMovingDistance; // mm
+
 
 #endif

@@ -14,3 +14,5 @@ enum MOTOR_DRIVE_MODE gMotorDriveMode = MOTOR_SLEEP;
 float gMotorDuty[SIDE_NUM] = {0};
 
 int gWallVoltage[WALL_SENS_NUM] = {0};
+
+float gMovingDistance = 0; // mm

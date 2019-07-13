@@ -15,6 +15,7 @@
 #define GPIO_HSPI_CS0  15
 #define GPIO_HSPI_CS1  27
 
+
 uint16_t read2Byte(spi_device_handle_t spi){
     // 2バイト読み込み
     // 送信データはダミー
@@ -47,6 +48,45 @@ float getAngle(spi_device_handle_t spi){
     float angle =  2.0*M_PI * (float)rawData / RESOLUTION;
 
     return angle;
+}
+
+float normalize(const float angle){
+    float normalizedAngle = angle;
+
+    while(normalizedAngle > M_PI){
+        normalizedAngle -= 2.0*M_PI;
+    }
+    while(normalizedAngle < -M_PI){
+        normalizedAngle += 2.0*M_PI;
+    }
+
+    return normalizedAngle;
+}
+
+void updateMovingDistance(const float angleLeft, const float angleRight){
+    // 移動距離を計算する
+    const float WHEEL_RADIUS = 13.5 / 2.0; // mm
+    const float THRESH = 0.001; //radians
+    static float prevLeft, prevRight;
+
+    float diffAngle[SIDE_NUM];
+
+    diffAngle[LEFT] = normalize(angleLeft - prevLeft);
+    diffAngle[RIGHT] = normalize(angleRight - prevRight);
+
+    for(int side_i=0; side_i<SIDE_NUM; side_i++){
+        if(fabs(diffAngle[side_i]) < THRESH){
+            diffAngle[side_i] = 0.0;
+        }
+    }
+
+    // エンコーダの取り付け向きの都合上、左側の符号を反転する
+    diffAngle[LEFT] *= -1.0;
+
+    gMovingDistance += WHEEL_RADIUS * (diffAngle[LEFT]+ diffAngle[RIGHT]) / 2.0;
+
+    prevLeft = angleLeft;
+    prevRight = angleRight;
 }
 
 void TaskReadEncoders(void *arg){
@@ -83,6 +123,8 @@ void TaskReadEncoders(void *arg){
     while(1){
         gWheelAngle[LEFT] = getAngle(spi_l);
         gWheelAngle[RIGHT] = getAngle(spi_r);
+
+        updateMovingDistance(gWheelAngle[LEFT], gWheelAngle[RIGHT]);
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
