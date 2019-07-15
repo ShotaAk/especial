@@ -77,9 +77,11 @@ void TaskCheckBatteryVoltage(void *arg){
         }
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
-        gBatteryVoltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars) * 2;
+        uint32_t battery_mV= esp_adc_cal_raw_to_voltage(adc_reading, adc_chars) * 2;
+        //Convert int mV to float V
+        gBatteryVoltage = battery_mV * 0.001;
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 

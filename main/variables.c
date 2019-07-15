@@ -6,7 +6,7 @@ float gGyro[AXIS_NUM] = {0};
 
 float gWheelAngle[SIDE_NUM] = {0};
 
-int gBatteryVoltage = 0;
+float gBatteryVoltage; // volts
 
 int gIndicatorValue = 0;
 

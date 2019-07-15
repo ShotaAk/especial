@@ -34,7 +34,7 @@ extern float gGyro[AXIS_NUM];
 
 extern float gWheelAngle[SIDE_NUM];
 
-extern int gBatteryVoltage;
+extern float gBatteryVoltage; // volts
 
 extern int gIndicatorValue;
 
