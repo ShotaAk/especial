@@ -29,14 +29,14 @@ enum WALL_SENS{
 };
 
 
-extern float gAccel[AXIS_NUM];
-extern float gGyro[AXIS_NUM];
+extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
+extern float gGyro[AXIS_NUM]; // radian/sec
 
 extern float gWheelAngle[SIDE_NUM];
 
 extern float gBatteryVoltage; // volts
 
-extern int gIndicatorValue;
+extern int gIndicatorValue; // 0 ~ 3
 
 extern enum MOTOR_DRIVE_MODE gMotorDriveMode;
 extern float gMotorDuty[SIDE_NUM];

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -21,10 +22,13 @@
 const uint8_t ADDR_WHO_AM_I = 0x00;
 const uint8_t ADDR_PWR_MGMT_1 = 0x06;
 const uint8_t ADDR_PWR_MGMT_2 = 0x07;
-const uint8_t ADDR_ACCEL_CONFIG = 0x14;
+const uint8_t ADDR_REG_BANK_SEL = 0x7F;
+const uint8_t ADDR2_GYRO_CONFIG1 = 0x01;
+const uint8_t ADDR2_ACCEL_CONFIG = 0x14;
 
+const uint8_t GYRO_FS_SEL = 1;
 const int ACCEL_SENSITIVITY = 16384; // LSB/g when ACCEL_FS=0
-const int GYRO_SENSITIVITY = 131; // LSB/(dps) when GYRO_FS_SEL=0
+const float GYRO_SENSITIVITY[4] = {131, 65.5, 32.8, 16.4}; // LSB/(dps) when GYRO_FS_SEL=1
 
 const uint8_t ADDR_ACCEL_OUT_H[AXIS_NUM] = {0x2d, 0x2f, 0x31};
 const uint8_t ADDR_ACCEL_OUT_L[AXIS_NUM] = {0x2e, 0x30, 0x32};
@@ -32,6 +36,10 @@ const uint8_t ADDR_ACCEL_OUT_L[AXIS_NUM] = {0x2e, 0x30, 0x32};
 const uint8_t ADDR_GYRO_OUT_H[AXIS_NUM] = {0x33, 0x35, 0x37};
 const uint8_t ADDR_GYRO_OUT_L[AXIS_NUM] = {0x34, 0x36, 0x38};
 
+
+inline float to_radians(float degrees) {
+    return degrees * (M_PI / 180.0);
+}
 
 uint8_t read1byte(spi_device_handle_t spi, const uint8_t address){
     // １バイト読み込み
@@ -80,38 +88,53 @@ void device_init(spi_device_handle_t spi){
     uint8_t mpu_id = read1byte(spi, ADDR_WHO_AM_I);
     printf("MPU ID: %02X\n", mpu_id);
 
+    // SLEEP未解除確認
     uint8_t recv_data = read1byte(spi, ADDR_PWR_MGMT_1);
     printf("before PWR_MGMT_1: %02X\n", recv_data);
 
+    // USER BANKの切り替え
+    uint8_t send_data = 0x02 << 4;
+    recv_data = write1byte(spi, ADDR_REG_BANK_SEL, send_data);
+    recv_data = read1byte(spi, ADDR_REG_BANK_SEL);
+    printf("BANK SEL: %02X\n", recv_data);
+    
+    // GYROの設定
+    send_data = 0x00 | (GYRO_FS_SEL << 1);
+    recv_data = write1byte(spi, ADDR2_GYRO_CONFIG1, send_data);
+    recv_data = read1byte(spi, ADDR2_GYRO_CONFIG1);
+    printf("GYRO CONFIG: %02X\n", recv_data);
+
+    // USER BANKの切り替え
+    send_data = 0x00 << 4;
+    recv_data = write1byte(spi, ADDR_REG_BANK_SEL, send_data);
+
     // SLEEP解除
-    uint8_t send_data = 0x01;
+    send_data = 0x01;
     recv_data = write1byte(spi, ADDR_PWR_MGMT_1, send_data);
 
     // SLEEP解除確認
     recv_data = read1byte(spi, ADDR_PWR_MGMT_1);
     printf("after PWR_MGMT_1: %02X\n", recv_data);
 
-    recv_data = read1byte(spi, ADDR_ACCEL_CONFIG);
-    printf("ACCEL_CONFIG: %02X\n", recv_data);
 }
 
-double get_accel(spi_device_handle_t spi, enum AXIS axis){
+float get_accel(spi_device_handle_t spi, enum AXIS axis){
     uint8_t accel_h = read1byte(spi, ADDR_ACCEL_OUT_H[axis]);
     uint8_t accel_l = read1byte(spi, ADDR_ACCEL_OUT_L[axis]);
 
     // printf("AXIS: %d: accel_h, accel_l: %02X, %02X\n", axis, accel_h, accel_l);
     int16_t accel = (accel_h << 8) | accel_l;
 
-    return (double)accel / ACCEL_SENSITIVITY;
+    return (float)accel / ACCEL_SENSITIVITY;
 }
 
-double get_gyro(spi_device_handle_t spi, enum AXIS axis){
+float get_gyro(spi_device_handle_t spi, enum AXIS axis){
     uint8_t gyro_h = read1byte(spi, ADDR_GYRO_OUT_H[axis]);
     uint8_t gyro_l = read1byte(spi, ADDR_GYRO_OUT_L[axis]);
 
     int16_t gyro = (gyro_h << 8) | gyro_l;
 
-    return (double)gyro / GYRO_SENSITIVITY;
+    return (float)gyro / GYRO_SENSITIVITY[GYRO_FS_SEL];
 }
 
 void TaskReadMotion(void *arg){
@@ -144,11 +167,12 @@ void TaskReadMotion(void *arg){
         gAccel[AXIS_Y] = get_accel(spi, AXIS_Y);
         gAccel[AXIS_Z] = get_accel(spi, AXIS_Z);
 
-        gGyro[AXIS_X] = get_gyro(spi, AXIS_X);
-        gGyro[AXIS_Y] = get_gyro(spi, AXIS_Y);
-        gGyro[AXIS_Z] = get_gyro(spi, AXIS_Z);
+        gGyro[AXIS_X] = to_radians(get_gyro(spi, AXIS_X));
+        gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y));
+        gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z));
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
+
 
