@@ -12,13 +12,9 @@ enum AXIS{
     AXIS_Z
 };
 
-enum MOTOR_DRIVE_MODE{
-    MOTOR_SLEEP,
-    MOTOR_STOP,
-    MOTOR_FORWARD,
-    MOTOR_BACKWARD,
-    MOTOR_ROTATE_CW,
-    MOTOR_ROTATE_CCW,
+enum MOTOR_STATE{
+    MOTOR_ON,
+    MOTOR_OFF
 };
 
 enum WALL_SENS{
@@ -30,16 +26,16 @@ enum WALL_SENS{
 
 
 extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
-extern float gGyro[AXIS_NUM]; // radian/sec
+extern float gGyro[AXIS_NUM]; // radians/sec
 
-extern float gWheelAngle[SIDE_NUM];
+extern float gWheelAngle[SIDE_NUM]; // radians
 
 extern float gBatteryVoltage; // volts
 
 extern int gIndicatorValue; // 0 ~ 3
 
-extern enum MOTOR_DRIVE_MODE gMotorDriveMode;
-extern float gMotorDuty[SIDE_NUM];
+extern enum MOTOR_STATE gMotorState;
+extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
 extern int gWallVoltage[WALL_SENS_NUM];
 

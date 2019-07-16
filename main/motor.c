@@ -21,6 +21,10 @@
 #define GPIO_NSLEEP 33
 #define GPIO_OUTPUT_PIN_SEL (1ULL<<GPIO_NSLEEP)
 
+
+static mcpwm_timer_t MC_TIMER[SIDE_NUM];
+
+
 static void mcpwm_example_gpio_initialize()
 {
     printf("initializing mcpwm gpio...\n");
@@ -60,6 +64,30 @@ static void brushed_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
     mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
 }
 
+static void motorDrive(void){
+    // グローバル変数を直接加工しない
+    float duty[SIDE_NUM];
+    duty[RIGHT] = gMotorDuty[RIGHT];
+    duty[LEFT] = gMotorDuty[LEFT];
+
+    for(int side_i=0; side_i < SIDE_NUM; side_i++){
+        // dutyを±100に加工する
+        if(duty[side_i] < -100){
+            duty[side_i] = -100;
+        }else if(duty[side_i] > 100){
+            duty[side_i] = 100;
+        }
+        
+        if(duty[side_i] < 0){
+            // dutyがマイナスのときは逆回転
+            duty[side_i] *= -1.0; // dutyの符号を正にする
+            brushed_motor_backward(MCPWM_UNIT_0, MC_TIMER[side_i], duty[side_i]);
+        }else{
+            brushed_motor_forward(MCPWM_UNIT_0, MC_TIMER[side_i], duty[side_i]);
+        }
+    }
+}
+
 void TaskMotorDrive(void *arg)
 {
 
@@ -89,69 +117,24 @@ void TaskMotorDrive(void *arg)
     pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
-    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);    //Configure PWM0A & PWM0B with above settings
 
-    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_1, &pwm_config);    //Configure PWM0A & PWM0B with above settings
+    MC_TIMER[RIGHT] = MCPWM_TIMER_0;
+    MC_TIMER[LEFT] = MCPWM_TIMER_1;
+
+    mcpwm_init(MCPWM_UNIT_0, MC_TIMER[RIGHT], &pwm_config);    //Configure PWM0A & PWM0B with above settings
+    mcpwm_init(MCPWM_UNIT_0, MC_TIMER[LEFT], &pwm_config);    //Configure PWM0A & PWM0B with above settings
 
     while (1) {
-        // グローバル変数を直接加工しない
-        float duty[SIDE_NUM];
-        duty[RIGHT] = gMotorDuty[RIGHT];
-        duty[LEFT] = gMotorDuty[LEFT];
 
-        // Dutyを0~100にする
-        for(int side_i=0; side_i < SIDE_NUM; side_i++){
-            if(duty[side_i] < 0){
-                duty[side_i] = 0;
-            }else if(duty[side_i] > 100){
-                duty[side_i] = 100;
-            }
-        }
-
-        switch(gMotorDriveMode){
-            case MOTOR_STOP:
-                // ブレーキ
-                // nSLEEPをOFFにして、モータの電源ON
-                gpio_set_level(GPIO_NSLEEP, 1);
-                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_1);
-                break;
-
-            case MOTOR_FORWARD:
-                // 前進
-                gpio_set_level(GPIO_NSLEEP, 1);
-                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
-                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
-                break;
-
-            case MOTOR_BACKWARD:
-                // 後進
-                gpio_set_level(GPIO_NSLEEP, 1);
-                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
-                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
-                break;
-
-            case MOTOR_ROTATE_CW:
-                // 時計回り
-                gpio_set_level(GPIO_NSLEEP, 1);
-                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
-                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
-                break;
-
-            case MOTOR_ROTATE_CCW:
-                // 反時計回り
-                gpio_set_level(GPIO_NSLEEP, 1);
-                brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, duty[RIGHT]);
-                brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_1, duty[LEFT]);
-                break;
-
-            case MOTOR_SLEEP:
-            default:
-                // nSLEEPをONにする
-                gpio_set_level(GPIO_NSLEEP, 0);
-                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-                brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_1);
-                break;
+        if(gMotorState == MOTOR_ON){
+            // nSLEEPをOFFにして、モータの電源ON
+            gpio_set_level(GPIO_NSLEEP, 1);
+            motorDrive();
+        }else{
+            // nSLEEPをONにして、モータの電源OFF
+            gpio_set_level(GPIO_NSLEEP, 0);
+            brushed_motor_stop(MCPWM_UNIT_0, MC_TIMER[RIGHT]);
+            brushed_motor_stop(MCPWM_UNIT_0, MC_TIMER[LEFT]);
         }
 
         vTaskDelay(1 / portTICK_RATE_MS);

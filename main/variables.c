@@ -10,7 +10,7 @@ float gBatteryVoltage; // volts
 
 int gIndicatorValue = 0;
 
-enum MOTOR_DRIVE_MODE gMotorDriveMode = MOTOR_SLEEP;
+enum MOTOR_STATE gMotorState = MOTOR_OFF;
 float gMotorDuty[SIDE_NUM] = {0};
 
 int gWallVoltage[WALL_SENS_NUM] = {0};
