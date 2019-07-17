@@ -29,6 +29,7 @@ extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
 extern float gGyro[AXIS_NUM]; // radians/sec
 
 extern float gWheelAngle[SIDE_NUM]; // radians
+extern float gMeasuredSpeed; // mm/s
 
 extern float gBatteryVoltage; // volts
 

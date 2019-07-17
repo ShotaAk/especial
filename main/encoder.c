@@ -6,7 +6,9 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
+#include "driver/timer.h"
 
+#include "parameters.h"
 #include "variables.h"
 
 #define GPIO_HSPI_MISO 12
@@ -15,6 +17,13 @@
 #define GPIO_HSPI_CS0  15
 #define GPIO_HSPI_CS1  27
 
+#define TIMER_DIVIDER  16  //  Hardware timer clock divider
+#define TIMER_SCALE    (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
+#define TIMER_GROUP    TIMER_GROUP_0
+#define TIMER_ID       TIMER_0 
+
+
+const uint16_t RESOLUTION = 4096;
 
 uint16_t read2Byte(spi_device_handle_t spi){
     // 2バイト読み込み
@@ -40,7 +49,6 @@ uint16_t read2Byte(spi_device_handle_t spi){
 }
 
 float getAngle(spi_device_handle_t spi){
-    const uint16_t RESOLUTION = 4095; // 4095 = 2^12 - 1
     uint16_t rawData = read2Byte(spi);
 
     rawData >>= 4; // LSBから4bitは常に0なので、シフトする
@@ -63,30 +71,37 @@ float normalize(const float angle){
     return normalizedAngle;
 }
 
-void updateMovingDistance(const float angleLeft, const float angleRight){
+void updateMeasurement(const float angleLeft, const float angleRight, const double currentTime){
     // 移動距離を計算する
-    const float WHEEL_RADIUS = 13.5 / 2.0; // mm
-    const float THRESH = 0.001; //radians
     static float prevLeft, prevRight;
+    static double prevTime;
 
     float diffAngle[SIDE_NUM];
 
     diffAngle[LEFT] = normalize(angleLeft - prevLeft);
     diffAngle[RIGHT] = normalize(angleRight - prevRight);
-
-    for(int side_i=0; side_i<SIDE_NUM; side_i++){
-        if(fabs(diffAngle[side_i]) < THRESH){
-            diffAngle[side_i] = 0.0;
-        }
-    }
-
+    double diffTime = currentTime - prevTime;
+    
     // エンコーダの取り付け向きの都合上、左側の符号を反転する
     diffAngle[LEFT] *= -1.0;
 
-    gMovingDistance += WHEEL_RADIUS * (diffAngle[LEFT]+ diffAngle[RIGHT]) / 2.0;
+    // 走行距離を加算
+    gMovingDistance += TIRE_RADIUS * (diffAngle[LEFT]+ diffAngle[RIGHT]) / 2.0;
+
+    // タイヤの角速度を計算
+    float angularVelocity[SIDE_NUM];
+    angularVelocity[LEFT] = diffAngle[LEFT] / diffTime;
+    angularVelocity[RIGHT] = diffAngle[RIGHT] / diffTime;
+    // 角速度をタイヤの周速度に変換
+    float velocity[SIDE_NUM];
+    velocity[LEFT] = angularVelocity[LEFT] * TIRE_RADIUS;
+    velocity[RIGHT] = angularVelocity[RIGHT] * TIRE_RADIUS;
+    // 車体速度に変換
+    gMeasuredSpeed = (velocity[LEFT] + velocity[RIGHT]) / 2.0;
 
     prevLeft = angleLeft;
     prevRight = angleRight;
+    prevTime = currentTime;
 }
 
 void TaskReadEncoders(void *arg){
@@ -103,12 +118,12 @@ void TaskReadEncoders(void *arg){
         .max_transfer_sz=4 // bytes
     };
     spi_device_interface_config_t devcfg={
-        .clock_speed_hz=10*1000*1000,   //Clock out at 1 MHz
+        .clock_speed_hz=1*1000*1000,   //Clock out at 1 MHz
         .mode=3,                    //SPI mode 3
         .spics_io_num=GPIO_HSPI_CS0,   //CS pin
         .queue_size=7,              //We want to be able to queue 7 transactions at a time
     };
-    //Initialize the SPI bus
+    // Initialize the SPI bus
     ret=spi_bus_initialize(HSPI_HOST, &buscfg, 1);
     ESP_ERROR_CHECK(ret);
     ret=spi_bus_add_device(HSPI_HOST, &devcfg, &spi_l);
@@ -118,13 +133,31 @@ void TaskReadEncoders(void *arg){
     ret=spi_bus_add_device(HSPI_HOST, &devcfg, &spi_r);
     ESP_ERROR_CHECK(ret);
 
+    // Initialize Timer
+    timer_config_t config;
+    config.divider = TIMER_DIVIDER;
+    config.counter_dir = TIMER_COUNT_UP;
+    config.counter_en = TIMER_PAUSE;
+    config.alarm_en = TIMER_ALARM_DIS;
+    config.intr_type = TIMER_INTR_LEVEL;
+    config.auto_reload = 1;
+    timer_init(TIMER_GROUP, TIMER_ID, &config);
+    /* Timer's counter will initially start from value below.
+       Also, if auto_reload is set, this value will be automatically reload on alarm */
+    timer_set_counter_value(TIMER_GROUP, TIMER_ID, 0x00000000ULL);
+    timer_start(TIMER_GROUP, TIMER_ID);
+
     printf("TaskReadEncoders initialized\n");
+    double currentTime;
 
     while(1){
         gWheelAngle[LEFT] = getAngle(spi_l);
         gWheelAngle[RIGHT] = getAngle(spi_r);
 
-        updateMovingDistance(gWheelAngle[LEFT], gWheelAngle[RIGHT]);
+        // 時間取得
+        timer_get_counter_time_sec(TIMER_GROUP, TIMER_ID, &currentTime);
+
+        updateMeasurement(gWheelAngle[LEFT], gWheelAngle[RIGHT], currentTime);
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
