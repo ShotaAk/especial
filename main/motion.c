@@ -6,6 +6,7 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
+#include "driver/timer.h"
 
 #include "motion.h"
 #include "variables.h"
@@ -18,6 +19,10 @@
 
 #define READ_FLAG    0x80
 
+#define TIMER_DIVIDER  16  //  Hardware timer clock divider
+#define TIMER_SCALE    (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
+#define TIMER_GROUP    TIMER_GROUP_0
+#define TIMER_ID       TIMER_1
 
 const uint8_t ADDR_WHO_AM_I = 0x00;
 const uint8_t ADDR_PWR_MGMT_1 = 0x06;
@@ -137,6 +142,16 @@ float get_gyro(spi_device_handle_t spi, enum AXIS axis){
     return (float)gyro / GYRO_SENSITIVITY[GYRO_FS_SEL];
 }
 
+void updateMeasuredAngle(const float gyroZ, const double currentTime){
+    static double prevTime;
+
+    double diffTime = currentTime - prevTime;
+
+    gMeasuredAngle += diffTime * gyroZ;
+
+    prevTime = currentTime;
+}
+
 void TaskReadMotion(void *arg){
     esp_err_t ret;
     spi_device_handle_t spi;
@@ -162,6 +177,22 @@ void TaskReadMotion(void *arg){
 
     device_init(spi);
 
+    // Initialize Timer
+    timer_config_t config;
+    config.divider = TIMER_DIVIDER;
+    config.counter_dir = TIMER_COUNT_UP;
+    config.counter_en = TIMER_PAUSE;
+    config.alarm_en = TIMER_ALARM_DIS;
+    config.intr_type = TIMER_INTR_LEVEL;
+    config.auto_reload = 1;
+    timer_init(TIMER_GROUP, TIMER_ID, &config);
+    /* Timer's counter will initially start from value below.
+       Also, if auto_reload is set, this value will be automatically reload on alarm */
+    timer_set_counter_value(TIMER_GROUP, TIMER_ID, 0x00000000ULL);
+    timer_start(TIMER_GROUP, TIMER_ID);
+
+    double currentTime;
+
     while(1){
         gAccel[AXIS_X] = get_accel(spi, AXIS_X);
         gAccel[AXIS_Y] = get_accel(spi, AXIS_Y);
@@ -171,8 +202,10 @@ void TaskReadMotion(void *arg){
         gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y));
         gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z));
 
+        // 時間取得
+        timer_get_counter_time_sec(TIMER_GROUP, TIMER_ID, &currentTime);
+        updateMeasuredAngle(gGyro[AXIS_Z], currentTime);
+
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
-
-

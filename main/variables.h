@@ -35,6 +35,7 @@ extern float gGyro[AXIS_NUM]; // radians/sec
 
 extern float gWheelAngle[SIDE_NUM]; // radians
 extern float gMeasuredSpeed; // m/s
+extern float gMeasuredAngle; // radians
 
 extern float gBatteryVoltage; // volts
 

@@ -6,6 +6,7 @@ float gGyro[AXIS_NUM] = {0};
 
 float gWheelAngle[SIDE_NUM] = {0};
 float gMeasuredSpeed = 0;
+float gMeasuredAngle; // radians
 
 float gBatteryVoltage = 0;
 
