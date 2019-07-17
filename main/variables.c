@@ -17,3 +17,5 @@ float gMotorDuty[SIDE_NUM] = {0};
 float gWallVoltage[WALL_SENS_NUM] = {0};
 
 float gMovingDistance = 0;
+
+enum CONTROL_REQUEST gControlRequest = CONT_NONE;

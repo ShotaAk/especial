@@ -7,6 +7,7 @@ set(COMPONENT_SRCS
     "motion.c"
     "wall_detector.c"
     "parameters.c"
+    "controller.c"
     )
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 

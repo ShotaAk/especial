@@ -24,12 +24,17 @@ enum WALL_SENS{
     WALL_SENS_FR,
 };
 
+enum CONTROL_REQUEST{
+    CONT_NONE,
+    CONT_FORWARD,
+};
+
 
 extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
 extern float gGyro[AXIS_NUM]; // radians/sec
 
 extern float gWheelAngle[SIDE_NUM]; // radians
-extern float gMeasuredSpeed; // mm/s
+extern float gMeasuredSpeed; // m/s
 
 extern float gBatteryVoltage; // volts
 
@@ -40,7 +45,8 @@ extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
 extern float gWallVoltage[WALL_SENS_NUM]; // volts
 
-extern float gMovingDistance; // mm
+extern float gMovingDistance; // meters
 
+extern enum CONTROL_REQUEST gControlRequest;
 
 #endif
