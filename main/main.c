@@ -104,11 +104,11 @@ static void TaskMain(void *arg){
         }
         // printf("ax, ay az: %f, %f, %f\n",gAccel[AXIS_X], gAccel[AXIS_Y], gAccel[AXIS_Z]);
         // printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
-        // printf("L, FL, FR, R: %d, %d, %d, %d\n", 
-        //         gWallVoltage[WALL_SENS_L], 
-        //         gWallVoltage[WALL_SENS_FL],
-        //         gWallVoltage[WALL_SENS_FR],
-        //         gWallVoltage[WALL_SENS_R]);
+        printf("L, FL, FR, R: %f, %f, %f, %f\n", 
+                gWallVoltage[WALL_SENS_L], 
+                gWallVoltage[WALL_SENS_FL],
+                gWallVoltage[WALL_SENS_FR],
+                gWallVoltage[WALL_SENS_R]);
 
         // printf("encoder L:R %f:%f\n",gWheelAngle[LEFT], gWheelAngle[RIGHT]);
 
@@ -116,7 +116,7 @@ static void TaskMain(void *arg){
 
         // printf("%f\n", gGyro[AXIS_Z]);
         
-        motorTest();
+        // motorTest();
 
         
 
@@ -130,8 +130,8 @@ void app_main()
     // xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
-    // xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
+    xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
     xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
 }
 

@@ -37,7 +37,7 @@ extern int gIndicatorValue; // 0 ~ 3
 extern enum MOTOR_STATE gMotorState;
 extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
-extern int gWallVoltage[WALL_SENS_NUM];
+extern float gWallVoltage[WALL_SENS_NUM]; // volts
 
 extern float gMovingDistance; // mm
 

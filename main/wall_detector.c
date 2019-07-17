@@ -81,8 +81,9 @@ void TaskDetectWall(void *arg){
     gpio_set_level(GPIO_RFLED_0, 0);
     gpio_set_level(GPIO_RFLED_1, 0);
 
+    uint32_t adc_readings[WALL_SENS_NUM] = {0};
+    uint32_t wallVoltage_mV = 0;
     while (1) {
-       uint32_t adc_readings[WALL_SENS_NUM] = {0};
         // LED ON
        gpio_set_level(GPIO_RFLED_0, 1);
        vTaskDelay(1 / portTICK_RATE_MS);
@@ -103,7 +104,9 @@ void TaskDetectWall(void *arg){
        gpio_set_level(GPIO_RFLED_1, 0);
 
        for(int adc_i=0; adc_i<WALL_SENS_NUM; adc_i++){
-           gWallVoltage[adc_i] = esp_adc_cal_raw_to_voltage(adc_readings[adc_i], adc_chars) * 2.0;
+           wallVoltage_mV  = esp_adc_cal_raw_to_voltage(adc_readings[adc_i], adc_chars) * 2.0;
+           //Convert int mV to float V
+           gWallVoltage[adc_i] = wallVoltage_mV * 0.001;
        }
     }
 }
