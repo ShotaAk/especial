@@ -8,6 +8,7 @@
 
 #include "indicator.h"
 #include "variables.h"
+#include "parameters.h"
 
 
 #define GPIO_LED0 22
@@ -34,7 +35,7 @@ void TaskIndicator(void *arg){
 
     bool ledToggle = false;
     while(1){
-        if(gBatteryVoltage > 3700){
+        if(gBatteryVoltage > LOW_BATTERY_VOLTAGE){
             // バッテリー電圧があれば、モードを表示
             gpio_set_level(GPIO_LED1, gIndicatorValue & 0x01);
             gpio_set_level(GPIO_LED0, (gIndicatorValue >> 1) & 0x01);

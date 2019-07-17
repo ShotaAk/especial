@@ -5,7 +5,9 @@ set(COMPONENT_SRCS
     "encoder.c"
     "indicator.c"
     "motion.c"
-    "wall_detector.c")
+    "wall_detector.c"
+    "parameters.c"
+    )
 set(COMPONENT_ADD_INCLUDEDIRS ".")
 
 register_component()
