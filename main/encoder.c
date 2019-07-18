@@ -74,6 +74,7 @@ float normalize(const float angle){
 void updateMeasurement(const float angleLeft, const float angleRight, const double currentTime){
     // 移動距離を計算する
     static float prevLeft, prevRight;
+    static float prevVelocity[SIDE_NUM];
     static double prevTime;
 
     float diffAngle[SIDE_NUM];
@@ -96,12 +97,18 @@ void updateMeasurement(const float angleLeft, const float angleRight, const doub
     float velocity[SIDE_NUM];
     velocity[LEFT] = angularVelocity[LEFT] * TIRE_RADIUS;
     velocity[RIGHT] = angularVelocity[RIGHT] * TIRE_RADIUS;
+    // ローパスフィルタをかける
+    velocity[LEFT] = velocity[LEFT] * 0.1 + prevVelocity[LEFT] * 0.9;
+    velocity[RIGHT] = velocity[RIGHT] * 0.1 + prevVelocity[RIGHT] * 0.9;
+
     // 車体速度に変換
     gMeasuredSpeed = (velocity[LEFT] + velocity[RIGHT]) / 2.0;
 
     prevLeft = angleLeft;
     prevRight = angleRight;
     prevTime = currentTime;
+    prevVelocity[LEFT] = velocity[LEFT];
+    prevVelocity[RIGHT] = velocity[RIGHT];
 }
 
 void TaskReadEncoders(void *arg){
