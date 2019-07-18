@@ -27,6 +27,7 @@ enum WALL_SENS{
 enum CONTROL_REQUEST{
     CONT_NONE,
     CONT_FORWARD,
+    CONT_ENKAI
 };
 
 

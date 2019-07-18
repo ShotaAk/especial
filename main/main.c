@@ -69,8 +69,28 @@ static void TaskMain(void *arg){
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 
     // gMotorState = MOTOR_ON;
-    // gMotorDuty[RIGHT] = 10;
-    // gMotorDuty[LEFT] = 10;
+    // gMotorDuty[RIGHT] = 20;
+    // gMotorDuty[LEFT] = 20;
+
+    //　起動時のデバッグ
+    const float thresh = 1.0;
+    if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // ダブルチェック
+        if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+            for(int step=0; step<10; step++){
+                vTaskDelay(300 / portTICK_PERIOD_MS);
+                gIndicatorValue = 3;
+                vTaskDelay(300 / portTICK_PERIOD_MS);
+                gIndicatorValue = 0;
+            }
+            if(gControlRequest == CONT_NONE){
+                printf("ENKAI!!!! \n");
+                gControlRequest = CONT_ENKAI;
+            }
+
+        }
+    }
 
     float prevAngle = gWheelAngle[RIGHT];
     while(1){
@@ -87,7 +107,6 @@ static void TaskMain(void *arg){
 
         if(gIndicatorValue == 3){
             // モード選択
-            const float thresh = 1.0;
             if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
 
@@ -104,16 +123,18 @@ static void TaskMain(void *arg){
                     // goForward(10);
                     // turnBack(10);
                     // Maze();
+                    // motorTest();
                     if(gControlRequest == CONT_NONE){
                         printf("REQUEST!!!! \n");
                         gControlRequest = CONT_FORWARD;
+                        // gControlRequest = CONT_ENKAI;
                     }
                 }
             }
 
         }
         // printf("ax, ay az: %f, %f, %f\n",gAccel[AXIS_X], gAccel[AXIS_Y], gAccel[AXIS_Z]);
-        printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
+        // printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
         // printf("L, FL, FR, R: %f, %f, %f, %f\n", 
         //         gWallVoltage[WALL_SENS_L], 
         //         gWallVoltage[WALL_SENS_FL],
@@ -124,7 +145,7 @@ static void TaskMain(void *arg){
 
         // printf("battery Voltage:%d\n", gBatteryVoltage);
 
-        // printf("%f\n", gMovingDistance);
+        printf("%f\n", gMeasuredAngle);
 
         // printf("Distance: %f m, Speed: %f m/s\n", gMovingDistance, gMeasuredSpeed);
         
