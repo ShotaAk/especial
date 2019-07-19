@@ -62,6 +62,48 @@ static void motorTest(void){
     printf("Motor Test Finish\n");
 }
 
+static void controlTest(void){
+
+    enum CONTROL_REQUEST requests[19] = {
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_TURN_LEFT,
+        CONT_TURN_LEFT,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_TURN_RIGHT,
+        CONT_TURN_RIGHT,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_TURN_BACK,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_FORWARD,
+        CONT_TURN_BACK,
+        CONT_FINISH
+    };
+
+
+
+    gControlRequest = CONT_NONE;
+    int step=0;
+    while(1){
+        if(gControlRequest == CONT_NONE){
+            printf("REQUEST!!!! %d\n",requests[step]);
+            gControlRequest = requests[step];
+            if(requests[step] == CONT_FINISH){
+                printf("FINISH!!!! \n");
+                break;
+            }
+            step++;
+        }
+
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+}
 
 static void TaskMain(void *arg){
     gIndicatorValue = 0x01;
@@ -124,12 +166,7 @@ static void TaskMain(void *arg){
                     // turnBack(10);
                     // Maze();
                     // motorTest();
-                    if(gControlRequest == CONT_NONE){
-                        printf("REQUEST!!!! \n");
-                        // gControlRequest = CONT_FORWARD;
-                        gControlRequest = CONT_TURN_LEFT;
-                        // gControlRequest = CONT_ENKAI;
-                    }
+                    controlTest();
                 }
             }
 
