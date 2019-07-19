@@ -126,7 +126,8 @@ static void TaskMain(void *arg){
                     // motorTest();
                     if(gControlRequest == CONT_NONE){
                         printf("REQUEST!!!! \n");
-                        gControlRequest = CONT_FORWARD;
+                        // gControlRequest = CONT_FORWARD;
+                        gControlRequest = CONT_TURN_LEFT;
                         // gControlRequest = CONT_ENKAI;
                     }
                 }
@@ -145,7 +146,7 @@ static void TaskMain(void *arg){
 
         // printf("battery Voltage:%d\n", gBatteryVoltage);
 
-        printf("%f\n", gMeasuredAngle);
+        // printf("%f\n", gMeasuredAngle);
 
         // printf("Distance: %f m, Speed: %f m/s\n", gMovingDistance, gMeasuredSpeed);
         

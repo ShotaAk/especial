@@ -32,8 +32,8 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {3.5, 0.0, 0.0};
-    const controlGain_t omegaGain = {0.40, 0.0, 0.0};
+    const controlGain_t speedGain = {20.0, 0.0, 0.0};
+    const controlGain_t omegaGain = {1.60, 0.0, 0.0};
 
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
@@ -102,6 +102,7 @@ void goForward(const float targetDistance){
     control_t control;
     control.maxSpeed = MAX_SPEED;
     control.maxOmega = 0;
+    control.accelSpeed = 0;
     control.accelOmega = 0;
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
@@ -109,7 +110,7 @@ void goForward(const float targetDistance){
     // 移動距離を初期化
     gMovingDistance = 0;
 
-    // 加速・低速
+    // 加速・定速
     control.accelSpeed = ACCEL;
     while(1){
         remainingDistance = targetDistance - gMovingDistance - 0.010;
@@ -119,7 +120,6 @@ void goForward(const float targetDistance){
             break;
         }
 
-
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
@@ -127,8 +127,6 @@ void goForward(const float targetDistance){
     // 減速
     control.accelSpeed = DECEL;
     while(gMovingDistance < targetDistance - 0.001){
-
-        
         // 一定速度まで減速したら、最低駆動トルクで走行
         if(TargetSpeed <= MIN_SPEED){
             control.forceSpeed = MIN_SPEED;
@@ -148,6 +146,80 @@ void goForward(const float targetDistance){
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
+}
+
+void turn(const enum SIDE direc, const float targetAngle){
+    const float MAX_OMEGA= M_PI; // rad/s
+    const float MIN_OMEGA= M_PI*0.05; // rad/s
+    const float ACCEL = M_PI*2; // rad/s^2
+    const float DECEL = -M_PI; // rad/s^2
+
+    float remainingAngle = 0; // 残角度
+
+    control_t control;
+    control.maxSpeed = 0;
+    control.maxOmega = MAX_OMEGA;
+    control.accelSpeed = 0;
+    control.accelOmega = 0;
+    control.forceSpeedEnable = 0;
+    control.forceOmegaEnable = 0; 
+
+    float startAngle = gMeasuredAngle; // 制御開始前の角度取得
+
+    // 加速・定速
+    control.accelOmega = ACCEL;
+    while(1){
+        remainingAngle = targetAngle - (gMeasuredAngle - startAngle);
+
+        // 残角度が停止角度より短かったら加速をやめる
+        if(remainingAngle <= TargetOmega*TargetOmega/ (2.0*control.accelOmega)){
+            break;
+        }
+
+        printf("remainingAngle : %f\n", remainingAngle);
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    // 減速
+    control.accelOmega= DECEL;
+    while((gMeasuredAngle - startAngle) < targetAngle){
+        // 一定速度まで減速したら、最低駆動トルクで走行
+        if(TargetOmega <= MIN_OMEGA){
+            control.forceOmega = MIN_OMEGA;
+            control.forceOmegaEnable = 1;
+        }
+
+        printf("moveAngle %f\n", gMeasuredAngle - startAngle);
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    // 速度が0以下になるまで制御を続ける
+    while(fabs(gGyro[AXIS_Z]) >= 0.05){
+        control.forceOmega = 0;
+        control.forceOmegaEnable = 1;
+
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    printf("finish\n");
+}
+
+void stop(void){
+    // その場にとどまる
+
+    control_t control;
+    control.maxSpeed = 0;
+    control.maxOmega = 0;
+    control.accelSpeed = 0;
+    control.accelOmega = 0;
+    control.forceSpeedEnable = 1;
+    control.forceOmegaEnable = 1; 
+    control.forceSpeed = 0;
+    control.forceOmega = 0;
+
+    updateController(&control);
 }
 
 void doEnkai(void){
@@ -173,18 +245,40 @@ void doEnkai(void){
 void TaskControlMotion(void *arg){
 
     while(1){
-        if(gControlRequest == CONT_FORWARD){
+        switch(gControlRequest){
+        case CONT_FORWARD:
             gMotorState = MOTOR_ON;
             goForward(0.090);
-            gControlRequest = CONT_NONE;
-        }else if(gControlRequest == CONT_ENKAI){
+            gControlRequest = CONT_STOP;
+            stop();
+            break;
+
+        case CONT_TURN_LEFT:
+            gMotorState = MOTOR_ON;
+            turn(LEFT, M_PI_2);
+            gControlRequest = CONT_STOP;
+            stop();
+            break;
+
+
+        case CONT_ENKAI:
             gMotorState = MOTOR_ON;
             doEnkai();
             gControlRequest = CONT_NONE;
-        }else{
+            break;
+
+        case CONT_STOP:
             gMotorState = MOTOR_ON;
+            stop();
+            break;
+
+        case CONT_NONE:
+        default:
+            gMotorState = MOTOR_OFF;
             gMotorDuty[RIGHT] = 0;
             gMotorDuty[LEFT] = 0;
+            break;
+
         }
 
         // printf("07_TaskControlMotion\n");
