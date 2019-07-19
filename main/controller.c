@@ -33,8 +33,8 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {20.0, 0.0, 0.0};
-    const controlGain_t omegaGain = {1.60, 0.0, 0.0};
+    const controlGain_t speedGain = {20.0, 0.1, 0.0}; // i= 0.1
+    const controlGain_t omegaGain = {1.30, 0.01, 0.0}; // i = 0.01
 
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
@@ -78,17 +78,30 @@ void updateController(control_t *control){
     float speedError = TargetSpeed - gMeasuredSpeed;
     float omegaError = TargetOmega - gGyro[AXIS_Z];
 
-    MotorVoltage[RIGHT] += speedError * speedGain.Kp;
-    MotorVoltage[LEFT]  += speedError * speedGain.Kp;
+    const float ERROR_MAX = 1.0e+10;
+    static float sumSpeedError = 0;
+    static float sumOmegaError = 0;
+    sumSpeedError += speedError;
+    sumOmegaError += omegaError;
+    // オーバフロー防止
+    if(fabs(sumSpeedError) >= ERROR_MAX){
+        sumSpeedError = copysign(ERROR_MAX, sumSpeedError);
+    }
+    if(fabs(sumOmegaError) >= ERROR_MAX){
+        sumOmegaError = copysign(ERROR_MAX, sumOmegaError);
+    }
+
+    MotorVoltage[RIGHT] += (speedError * speedGain.Kp + sumSpeedError * speedGain.Ki);
+    MotorVoltage[LEFT]  += (speedError * speedGain.Kp + sumSpeedError * speedGain.Ki);
 
     // 角速度値を入力
-    MotorVoltage[RIGHT] -= omegaError * omegaGain.Kp;
-    MotorVoltage[LEFT]  += omegaError * omegaGain.Kp;
+    MotorVoltage[RIGHT] -= (omegaError * omegaGain.Kp + sumOmegaError * omegaGain.Ki);
+    MotorVoltage[LEFT]  += (omegaError * omegaGain.Kp + sumOmegaError * omegaGain.Ki);
     
     // printf("MotorVoltage, Error: %f, %f, %f\n", MotorVoltage[LEFT], MotorVoltage[RIGHT], omegaError);
 
     // 印加電圧リミット
-    const float voltageLimit = 2.0; // voltage
+    const float voltageLimit = 3.0; // voltage
     for(int side_i=0; side_i<SIDE_NUM; side_i++){
         if(MotorVoltage[side_i] > voltageLimit){
             MotorVoltage[side_i] = voltageLimit;
@@ -161,7 +174,7 @@ void goForward(const float targetDistance){
 
 void turn(const float targetAngle){
     const float MAX_OMEGA= M_PI; // rad/s
-    const float MIN_OMEGA= M_PI*0.05; // rad/s
+    const float MIN_OMEGA= M_PI*0.02; // rad/s
     const float ACCEL = M_PI*2; // rad/s^2
     const float DECEL = -M_PI; // rad/s^2
 

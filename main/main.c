@@ -94,7 +94,7 @@ static void controlTest(void){
         if(gControlRequest == CONT_NONE){
             printf("REQUEST!!!! %d\n",requests[step]);
             gControlRequest = requests[step];
-            if(requests[step] == CONT_FINISH){
+            if(requests[step] == CONT_FINISH || gControlRequest == CONT_FINISH){
                 printf("FINISH!!!! \n");
                 break;
             }
@@ -115,7 +115,7 @@ static void TaskMain(void *arg){
     // gMotorDuty[LEFT] = 20;
 
     //　起動時のデバッグ
-    const float thresh = 1.0;
+    const float thresh = 2.0;
     if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // ダブルチェック
@@ -126,11 +126,8 @@ static void TaskMain(void *arg){
                 vTaskDelay(300 / portTICK_PERIOD_MS);
                 gIndicatorValue = 0;
             }
-            if(gControlRequest == CONT_NONE){
-                printf("ENKAI!!!! \n");
-                gControlRequest = CONT_ENKAI;
-            }
-
+            printf("ENKAI!!!! \n");
+            gControlRequest = CONT_ENKAI;
         }
     }
 
