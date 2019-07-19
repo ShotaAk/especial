@@ -31,7 +31,7 @@ const uint8_t ADDR_REG_BANK_SEL = 0x7F;
 const uint8_t ADDR2_GYRO_CONFIG1 = 0x01;
 const uint8_t ADDR2_ACCEL_CONFIG = 0x14;
 
-const uint8_t GYRO_FS_SEL = 1;
+const uint8_t GYRO_FS_SEL = 3;
 const int ACCEL_SENSITIVITY = 16384; // LSB/g when ACCEL_FS=0
 const float GYRO_SENSITIVITY[4] = {131, 65.5, 32.8, 16.4}; // LSB/(dps) when GYRO_FS_SEL=1
 
@@ -41,6 +41,7 @@ const uint8_t ADDR_ACCEL_OUT_L[AXIS_NUM] = {0x2e, 0x30, 0x32};
 const uint8_t ADDR_GYRO_OUT_H[AXIS_NUM] = {0x33, 0x35, 0x37};
 const uint8_t ADDR_GYRO_OUT_L[AXIS_NUM] = {0x34, 0x36, 0x38};
 
+static float biasGyro[AXIS_NUM] = {0};
 
 inline float to_radians(float degrees) {
     return degrees * (M_PI / 180.0);
@@ -89,35 +90,51 @@ uint8_t write1byte(spi_device_handle_t spi, const uint8_t address, const uint8_t
 }
 
 void device_init(spi_device_handle_t spi){
-    // Who AM I
-    uint8_t mpu_id = read1byte(spi, ADDR_WHO_AM_I);
-    printf("MPU ID: %02X\n", mpu_id);
+    // デバイスリセット
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
+    uint8_t send_data = 0x81;
+    uint8_t recv_data = write1byte(spi, ADDR_PWR_MGMT_1, send_data);
 
-    // SLEEP未解除確認
-    uint8_t recv_data = read1byte(spi, ADDR_PWR_MGMT_1);
-    printf("before PWR_MGMT_1: %02X\n", recv_data);
+    // SLEEP解除 LOW_POWER_MODE_OFF
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
+    send_data = 0x01;
+    recv_data = write1byte(spi, ADDR_PWR_MGMT_1, send_data);
+
+    // Disable Accel and Gyro
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
+    send_data = 0x3F;
+    recv_data = write1byte(spi, ADDR_PWR_MGMT_2, send_data);
 
     // USER BANKの切り替え
-    uint8_t send_data = 0x02 << 4;
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
+    send_data = 0x02 << 4;
     recv_data = write1byte(spi, ADDR_REG_BANK_SEL, send_data);
-    recv_data = read1byte(spi, ADDR_REG_BANK_SEL);
-    printf("BANK SEL: %02X\n", recv_data);
     
     // GYROの設定
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     send_data = 0x00 | (GYRO_FS_SEL << 1);
     recv_data = write1byte(spi, ADDR2_GYRO_CONFIG1, send_data);
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     recv_data = read1byte(spi, ADDR2_GYRO_CONFIG1);
     printf("GYRO CONFIG: %02X\n", recv_data);
 
     // USER BANKの切り替え
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     send_data = 0x00 << 4;
     recv_data = write1byte(spi, ADDR_REG_BANK_SEL, send_data);
 
-    // SLEEP解除
+    // Enable Accel and Gyro
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
+    send_data = 0x00;
+    recv_data = write1byte(spi, ADDR_PWR_MGMT_2, send_data);
+
+    // SLEEP解除 LOW_POWER_MODE_OFF
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     send_data = 0x01;
     recv_data = write1byte(spi, ADDR_PWR_MGMT_1, send_data);
 
     // SLEEP解除確認
+    vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     recv_data = read1byte(spi, ADDR_PWR_MGMT_1);
     printf("after PWR_MGMT_1: %02X\n", recv_data);
 
@@ -147,9 +164,26 @@ void updateMeasuredAngle(const float gyroZ, const double currentTime){
 
     double diffTime = currentTime - prevTime;
 
+    // printf("gyro: %f\n", gyroZ);
     gMeasuredAngle += diffTime * gyroZ;
 
     prevTime = currentTime;
+}
+
+void updateBias(spi_device_handle_t spi, const int times){
+    // センサの平均値を取る
+    float sumGyro[AXIS_NUM] = {0};
+    for(int i=0; i<times; i++){
+        for(int axis_i=0; axis_i<AXIS_NUM; axis_i++){
+            sumGyro[axis_i] += to_radians(get_gyro(spi, axis_i));
+        }
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    for(int axis_i=0; axis_i<AXIS_NUM; axis_i++){
+        biasGyro[axis_i] = sumGyro[axis_i] / (float)times;
+    }
+    printf("biasyGyro X, Y, Z: %f, %f, %f\n",biasGyro[AXIS_X], biasGyro[AXIS_Y], biasGyro[AXIS_Z]);
 }
 
 void TaskReadMotion(void *arg){
@@ -191,21 +225,24 @@ void TaskReadMotion(void *arg){
     timer_set_counter_value(TIMER_GROUP, TIMER_ID, 0x00000000ULL);
     timer_start(TIMER_GROUP, TIMER_ID);
 
-    double currentTime;
+    // センサの
+    updateBias(spi, 1000);
 
+    double currentTime;
     while(1){
         gAccel[AXIS_X] = get_accel(spi, AXIS_X);
         gAccel[AXIS_Y] = get_accel(spi, AXIS_Y);
         gAccel[AXIS_Z] = get_accel(spi, AXIS_Z);
 
-        gGyro[AXIS_X] = to_radians(get_gyro(spi, AXIS_X));
-        gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y));
-        gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z));
+        gGyro[AXIS_X] = to_radians(get_gyro(spi, AXIS_X)) - biasGyro[AXIS_X];
+        gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y)) - biasGyro[AXIS_Y];
+        gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z)) - biasGyro[AXIS_Z];
 
         // 時間取得
         timer_get_counter_time_sec(TIMER_GROUP, TIMER_ID, &currentTime);
         updateMeasuredAngle(gGyro[AXIS_Z], currentTime);
 
+        // printf("04_TaskReadMotion\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
