@@ -33,8 +33,8 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {20.0, 0.1, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {1.30, 0.01, 0.0}; // i = 0.01
+    const controlGain_t speedGain = {10.0, 0.1, 0.0}; // i= 0.1
+    const controlGain_t omegaGain = {1.00, 0.01, 0.0}; // i = 0.01
 
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
@@ -212,7 +212,7 @@ void turn(const float targetAngle){
 
     // 減速
     control.accelOmega = DECEL;
-    while(fabs((gMeasuredAngle - startAngle)) < fabs(targetAngle)){
+    while(fabs((gMeasuredAngle - startAngle)) < fabs(targetAngle) - M_PI*0.01){
         // 一定速度まで減速したら、最低駆動トルクで走行
         if(fabs(TargetOmega) <= MIN_OMEGA){
             control.forceOmega = MIN_OMEGA;
@@ -225,7 +225,7 @@ void turn(const float targetAngle){
     }
 
     // 速度が0以下になるまで制御を続ける
-    while(fabs(gGyro[AXIS_Z]) >= 0.05){
+    while(fabs(gGyro[AXIS_Z]) >= 0.01){
         control.forceOmega = 0;
         control.forceOmegaEnable = 1;
 
@@ -235,7 +235,7 @@ void turn(const float targetAngle){
     // printf("finish\n");
 }
 
-void stop(void){
+void stop(const int times){
     // その場にとどまる
 
     control_t control;
@@ -248,7 +248,10 @@ void stop(void){
     control.forceSpeed = 0;
     control.forceOmega = 0;
 
-    updateController(&control);
+    for(int i=0;i<times;i++){
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
 }
 
 void doEnkai(void){
@@ -272,6 +275,7 @@ void doEnkai(void){
 }
 
 void TaskControlMotion(void *arg){
+    const int waitTime = 500;
 
     while(1){
         switch(gControlRequest){
@@ -279,28 +283,28 @@ void TaskControlMotion(void *arg){
             gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             goForward(0.090);
-            stop();
+            stop(waitTime);
             break;
 
         case CONT_TURN_LEFT:
             gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(M_PI_2);
-            stop();
+            stop(waitTime);
             break;
 
         case CONT_TURN_RIGHT:
             gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(-M_PI_2);
-            stop();
+            stop(waitTime);
             break;
 
         case CONT_TURN_BACK:
             gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(M_PI);
-            stop();
+            stop(waitTime);
             break;
 
         case CONT_ENKAI:
@@ -313,7 +317,7 @@ void TaskControlMotion(void *arg){
         case CONT_STOP:
             // リクエスト待機状態
             gMotorState = MOTOR_ON;
-            stop();
+            stop(1);
             break;
 
         case CONT_FINISH:

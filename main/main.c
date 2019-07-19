@@ -86,6 +86,14 @@ static void controlTest(void){
         CONT_FINISH
     };
 
+    // enum CONTROL_REQUEST requests[19] = {
+    //     CONT_TURN_LEFT,
+    //     CONT_TURN_LEFT,
+    //     CONT_TURN_LEFT,
+    //     CONT_TURN_LEFT,
+    //     CONT_FINISH
+    // };
+
 
 
     gControlRequest = CONT_NONE;
@@ -94,7 +102,7 @@ static void controlTest(void){
         if(gControlRequest == CONT_NONE){
             printf("REQUEST!!!! %d\n",requests[step]);
             gControlRequest = requests[step];
-            if(requests[step] == CONT_FINISH || gControlRequest == CONT_FINISH){
+            if(requests[step] == CONT_FINISH){
                 printf("FINISH!!!! \n");
                 break;
             }
@@ -169,7 +177,7 @@ static void TaskMain(void *arg){
 
         }
         // printf("ax, ay az: %f, %f, %f\n",gAccel[AXIS_X], gAccel[AXIS_Y], gAccel[AXIS_Z]);
-        // printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
+        printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
         // printf("L, FL, FR, R: %f, %f, %f, %f\n", 
         //         gWallVoltage[WALL_SENS_L], 
         //         gWallVoltage[WALL_SENS_FL],
