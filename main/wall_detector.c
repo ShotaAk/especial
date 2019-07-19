@@ -86,6 +86,7 @@ void TaskDetectWall(void *arg){
     while (1) {
         // LED ON
        gpio_set_level(GPIO_RFLED_0, 1);
+       // printf("06_TaskDetectWall\n");
        vTaskDelay(1 / portTICK_RATE_MS);
        // ADC
        adc_readings[WALL_SENS_L] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_L]);
@@ -96,6 +97,7 @@ void TaskDetectWall(void *arg){
 
        // LED ON
        gpio_set_level(GPIO_RFLED_1, 1);
+       // printf("06_TaskDetectWall\n");
        vTaskDelay(1 / portTICK_RATE_MS);
        // ADC
        adc_readings[WALL_SENS_R] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_R]);

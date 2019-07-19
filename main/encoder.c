@@ -166,6 +166,7 @@ void TaskReadEncoders(void *arg){
 
         updateMeasurement(gWheelAngle[LEFT], gWheelAngle[RIGHT], currentTime);
 
+        // printf("02_TaskEncoder\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }

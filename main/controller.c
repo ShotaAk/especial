@@ -32,7 +32,7 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {10.0, 0.0, 0.0};
+    const controlGain_t speedGain = {3.5, 0.0, 0.0};
     const controlGain_t omegaGain = {0.40, 0.0, 0.0};
 
     // 直進方向の速度更新
@@ -75,7 +75,7 @@ void updateController(control_t *control){
     MotorVoltage[RIGHT] -= omegaError * omegaGain.Kp;
     MotorVoltage[LEFT]  += omegaError * omegaGain.Kp;
     
-    printf("MotorVoltage, Error: %f, %f, %f\n", MotorVoltage[LEFT], MotorVoltage[RIGHT], omegaError);
+    // printf("MotorVoltage, Error: %f, %f, %f\n", MotorVoltage[LEFT], MotorVoltage[RIGHT], omegaError);
 
     // 印加電圧リミット
     const float voltageLimit = 2.0; // voltage
@@ -187,6 +187,7 @@ void TaskControlMotion(void *arg){
             gMotorDuty[LEFT] = 0;
         }
 
+        // printf("07_TaskControlMotion\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 

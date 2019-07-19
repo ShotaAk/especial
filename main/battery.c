@@ -81,6 +81,7 @@ void TaskCheckBatteryVoltage(void *arg){
         //Convert int mV to float V
         gBatteryVoltage = battery_mV * 0.001;
 
+        // printf("01_TaskBattery\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }

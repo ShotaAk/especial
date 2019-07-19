@@ -78,7 +78,7 @@ static void TaskMain(void *arg){
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // ダブルチェック
         if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
-            for(int step=0; step<10; step++){
+            for(int step=0; step<5; step++){
                 vTaskDelay(300 / portTICK_PERIOD_MS);
                 gIndicatorValue = 3;
                 vTaskDelay(300 / portTICK_PERIOD_MS);
@@ -155,6 +155,7 @@ static void TaskMain(void *arg){
 
         
 
+        // printf("00_TaskMain\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
@@ -162,8 +163,8 @@ static void TaskMain(void *arg){
 void app_main()
 {
     xTaskCreate(TaskCheckBatteryVoltage, "TaskCheckBatteryVoltage", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 6, NULL);
-    xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 5, NULL);
+    xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
+    xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 4, NULL);
     xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
     xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);

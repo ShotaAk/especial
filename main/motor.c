@@ -137,6 +137,7 @@ void TaskMotorDrive(void *arg)
             brushed_motor_stop(MCPWM_UNIT_0, MC_TIMER[LEFT]);
         }
 
+        // printf("05_TaskMotor\n");
         vTaskDelay(1 / portTICK_RATE_MS);
     }
 }
