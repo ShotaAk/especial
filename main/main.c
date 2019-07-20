@@ -129,6 +129,14 @@ void requestAndWait(const enum CONTROL_REQUEST request){
 
 void searchLefthand(void){
     printf("search left hand\n");
+
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    // ここからモータに電源が入る
     gControlRequest = CONT_NONE; // 待機状態
 
     //半区画進む

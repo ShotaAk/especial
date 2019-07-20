@@ -48,6 +48,7 @@ enum CONTROL_REQUEST{
 
 extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
 extern float gGyro[AXIS_NUM]; // radians/sec
+extern int gGyroBiasResetRequest; // 0 or 1
 
 extern float gWheelAngle[SIDE_NUM]; // radians
 extern float gMeasuredSpeed; // m/s

@@ -225,11 +225,17 @@ void TaskReadMotion(void *arg){
     timer_set_counter_value(TIMER_GROUP, TIMER_ID, 0x00000000ULL);
     timer_start(TIMER_GROUP, TIMER_ID);
 
-    // センサの
+    // ジャイロののドリフト解消
     updateBias(spi, 1000);
 
     double currentTime;
     while(1){
+        if(gGyroBiasResetRequest){
+            updateBias(spi, 1000);
+            gGyroBiasResetRequest = 0; // フラグを消して、処理の完了を伝える
+        }
+
+        // センサ値更新
         gAccel[AXIS_X] = get_accel(spi, AXIS_X);
         gAccel[AXIS_Y] = get_accel(spi, AXIS_Y);
         gAccel[AXIS_Z] = get_accel(spi, AXIS_Z);

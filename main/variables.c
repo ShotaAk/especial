@@ -3,6 +3,7 @@
 
 float gAccel[AXIS_NUM] = {0};
 float gGyro[AXIS_NUM] = {0};
+int gGyroBiasResetRequest; // 0 or 1
 
 float gWheelAngle[SIDE_NUM] = {0};
 float gMeasuredSpeed = 0;
