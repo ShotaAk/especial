@@ -16,6 +16,7 @@ enum MOTOR_STATE gMotorState = MOTOR_OFF;
 float gMotorDuty[SIDE_NUM] = {0};
 
 float gWallVoltage[WALL_SENS_NUM] = {0};
+int gIsWall[DIREC_NUM] = {0};
 
 float gMovingDistance = 0;
 

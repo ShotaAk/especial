@@ -49,6 +49,40 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
     }
 }
 
+void updateWallExistence(const float *wallVoltages){
+    // 壁のありなし判定をする
+    const float THRESH_VOLTAGES[DIREC_NUM] = {
+        [DIREC_FRONT] = 0.5, 
+        [DIREC_LEFT]  = 0.5, 
+        [DIREC_RIGHT] = 0.5, 
+        [DIREC_BACK]  = 0.5}; // V
+
+    // printf("voltages,L, R, F: %f, %f, %f\n",
+    //         wallVoltages[WALL_SENS_L],
+    //         wallVoltages[WALL_SENS_R],
+    //         (wallVoltages[WALL_SENS_FL] + wallVoltages[WALL_SENS_FR])*0.5);
+
+    if(wallVoltages[WALL_SENS_L] > THRESH_VOLTAGES[DIREC_LEFT]){
+        gIsWall[DIREC_LEFT] = 1;
+    }else{
+        gIsWall[DIREC_LEFT] = 0;
+    }
+
+    if(wallVoltages[WALL_SENS_R] > THRESH_VOLTAGES[DIREC_RIGHT]){
+        gIsWall[DIREC_RIGHT] = 1;
+    }else{
+        gIsWall[DIREC_RIGHT] = 0;
+    }
+
+    if( (wallVoltages[WALL_SENS_FL] + wallVoltages[WALL_SENS_FR]) * 0.5 
+            > THRESH_VOLTAGES[DIREC_FRONT]){
+        gIsWall[DIREC_FRONT] = 1;
+    }else{
+        gIsWall[DIREC_FRONT] = 0;
+    }
+
+}
+
 void TaskDetectWall(void *arg){
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
@@ -82,7 +116,7 @@ void TaskDetectWall(void *arg){
     gpio_set_level(GPIO_RFLED_1, 0);
 
     uint32_t adc_readings[WALL_SENS_NUM] = {0};
-    uint32_t wallVoltage_mV = 0;
+    float wallVoltages[WALL_SENS_NUM] = {0};
     while (1) {
         // LED ON
        gpio_set_level(GPIO_RFLED_0, 1);
@@ -106,9 +140,12 @@ void TaskDetectWall(void *arg){
        gpio_set_level(GPIO_RFLED_1, 0);
 
        for(int adc_i=0; adc_i<WALL_SENS_NUM; adc_i++){
-           wallVoltage_mV  = esp_adc_cal_raw_to_voltage(adc_readings[adc_i], adc_chars) * 2.0;
-           //Convert int mV to float V
-           gWallVoltage[adc_i] = wallVoltage_mV * 0.001;
+           wallVoltages[adc_i] = 
+               (float)esp_adc_cal_raw_to_voltage(adc_readings[adc_i], adc_chars) 
+               * 0.001; // mVからVに変換する
+            
+           gWallVoltage[adc_i] = wallVoltages[adc_i];
+           updateWallExistence(wallVoltages);
        }
     }
 }

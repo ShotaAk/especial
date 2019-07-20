@@ -2,10 +2,18 @@
 #define VARIABLES_H
 
 #define SIDE_NUM 2
+#define DIREC_NUM 4
 #define AXIS_NUM 3
 #define WALL_SENS_NUM 4
 
 enum SIDE{ RIGHT=0, LEFT};
+enum DIRECTION{
+    DIREC_FRONT,
+    DIREC_LEFT,
+    DIREC_RIGHT,
+    DIREC_BACK,
+};
+
 enum AXIS{
     AXIS_X=0,
     AXIS_Y,
@@ -51,6 +59,7 @@ extern enum MOTOR_STATE gMotorState;
 extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
 extern float gWallVoltage[WALL_SENS_NUM]; // volts
+extern int gIsWall[DIREC_NUM];
 
 extern float gMovingDistance; // meters
 
