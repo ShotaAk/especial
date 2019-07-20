@@ -35,7 +35,7 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {10.0, 0.1, 0.0}; // i= 0.1
+    const controlGain_t speedGain = {12.0, 0.0, 0.0}; // i= 0.1
     const controlGain_t omegaGain = {1.00, 0.01, 0.0}; // i = 0.01
 
     // 直進方向の速度更新
@@ -312,7 +312,7 @@ void doEnkai(void){
 
 void TaskControlMotion(void *arg){
     const int waitTime = 500;
-    const float TIME_OUT = 3.0; // sec
+    const float TIME_OUT = 1.5; // sec
 
     while(1){
         switch(gControlRequest){
@@ -353,7 +353,7 @@ void TaskControlMotion(void *arg){
 
         case CONT_KETSUATE:
             gMotorState = MOTOR_ON;
-            straight(-0.010, TIME_OUT);
+            straight(-0.030, TIME_OUT);
             stop(waitTime);
             straight(0.010, TIME_OUT);
             stop(waitTime);
