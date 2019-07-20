@@ -52,9 +52,9 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 void updateWallExistence(const float *wallVoltages){
     // 壁のありなし判定をする
     const float THRESH_VOLTAGES[DIREC_NUM] = {
-        [DIREC_FRONT] = 0.5, 
-        [DIREC_LEFT]  = 0.5, 
-        [DIREC_RIGHT] = 0.5, 
+        [DIREC_FRONT] = 0.12, 
+        [DIREC_LEFT]  = 0.15, 
+        [DIREC_RIGHT] = 0.15, 
         [DIREC_BACK]  = 0.5}; // V
 
     // printf("voltages,L, R, F: %f, %f, %f\n",
