@@ -125,7 +125,75 @@ void updateController(control_t *control){
     gMotorDuty[LEFT] = 100.0 * MotorVoltage[LEFT] / gBatteryVoltage;
 }
 
-int straight(const float targetDistance, const float timeout){
+int straight(const float targetDistance, const float endSpeed, const float timeout){
+    // 到達地点で速度がendSpeedになる直線走行
+    const float MAX_SPEED = 0.5; // m/s
+    const float ACCEL = 1.0; // m/s^2
+    const float DECEL = -1.0; // m/s^2
+
+    float remainingDistance = 0; // 残距離
+    control_t control;
+    control.maxSpeed = MAX_SPEED;
+    control.maxOmega = 0;
+    control.invertSpeed = 0;
+    control.invertOmega = 0;
+    control.accelSpeed = 0;
+    control.accelOmega = 0;
+    control.forceSpeedEnable = 0;
+    control.forceOmegaEnable = 0; 
+
+    if(targetDistance < 0){
+        control.invertSpeed = 1;
+    }
+
+    // 移動距離を初期化
+    gMovingDistance = 0;
+
+    // 時間計測開始
+    clock_t startTime = clock();
+
+    // 加速・定速
+    control.accelSpeed = ACCEL;
+    while(1){
+        remainingDistance = fabs(targetDistance - gMovingDistance) - 0.010;
+
+        // 残距離が減速距離より短かったら加速をやめる
+        if(remainingDistance <= 
+                (TargetSpeed*TargetSpeed - endSpeed*endSpeed) / (2.0*control.accelSpeed)){
+            break;
+        }
+
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            return 0;
+        }
+    }
+
+    // 減速
+    control.accelSpeed = DECEL;
+    while(fabs(gMovingDistance) < fabs(targetDistance)){
+        // 目標速度が終端速度よりも小さくなったら、加速度(減速度)を0にする
+        if(fabs(TargetSpeed) <= fabs(endSpeed)){
+            control.accelSpeed = 0;
+        }
+
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int straightAndStop(const float targetDistance, const float timeout){
+    // 到達地点で速度が0になる直線走行
     const float MAX_SPEED = 0.5; // m/s
     const float MIN_SPEED = 0.2; // m/s
     const float ACCEL = 1.0; // m/s^2
@@ -312,22 +380,29 @@ void doEnkai(void){
 
 void TaskControlMotion(void *arg){
     const int waitTime = 500;
-    const float TIME_OUT = 1.5; // sec
+    const float TIME_OUT = 0.5; // sec
 
     while(1){
         switch(gControlRequest){
         case CONT_FORWARD:
             gMotorState = MOTOR_ON;
-            straight(0.090, TIME_OUT);
+            // straightAndStop(0.090, TIME_OUT);
+            // gControlRequest = CONT_NONE; // リクエスト受付開始
+            // stop(waitTime);
+
+            straight(0.090, 0.2, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
-            stop(waitTime);
             break;
 
         case CONT_HALF_FORWARD:
             gMotorState = MOTOR_ON;
-            straight(0.045, TIME_OUT);
+            // straightAndStop(0.045, TIME_OUT);
+            // gControlRequest = CONT_NONE; // リクエスト受付開始
+            // stop(waitTime);
+            
+            straight(0.045, 0.2, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
-            stop(waitTime);
+            
             break;
 
         case CONT_TURN_LEFT:
@@ -353,9 +428,9 @@ void TaskControlMotion(void *arg){
 
         case CONT_KETSUATE:
             gMotorState = MOTOR_ON;
-            straight(-0.030, TIME_OUT);
+            straightAndStop(-0.045, TIME_OUT);
             stop(waitTime);
-            straight(0.010, TIME_OUT);
+            straightAndStop(0.010, TIME_OUT);
             stop(waitTime);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
