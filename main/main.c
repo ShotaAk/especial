@@ -306,6 +306,6 @@ void app_main()
     xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
     xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 2, NULL);
+    xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 6, NULL);
 }
 

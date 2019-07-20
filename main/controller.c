@@ -36,7 +36,7 @@ typedef struct{
 
 void updateController(control_t *control){
     const controlGain_t speedGain = {12.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {1.00, 0.01, 0.0}; // i = 0.01
+    const controlGain_t omegaGain = {1.00, 0.000001, 0.0}; // i = 0.01
 
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
@@ -400,7 +400,7 @@ void TaskControlMotion(void *arg){
             // gControlRequest = CONT_NONE; // リクエスト受付開始
             // stop(waitTime);
             
-            straight(0.045, 0.2, TIME_OUT);
+            straight(0.040, 0.2, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             
             break;
@@ -430,7 +430,7 @@ void TaskControlMotion(void *arg){
             gMotorState = MOTOR_ON;
             straightAndStop(-0.045, TIME_OUT);
             stop(waitTime);
-            straightAndStop(0.010, TIME_OUT);
+            straightAndStop(0.005, TIME_OUT);
             stop(waitTime);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
