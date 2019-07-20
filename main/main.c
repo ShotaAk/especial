@@ -64,35 +64,40 @@ static void motorTest(void){
 
 static void controlTest(void){
 
+    // enum CONTROL_REQUEST requests[19] = {
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_TURN_LEFT,
+    //     CONT_TURN_LEFT,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_TURN_RIGHT,
+    //     CONT_TURN_RIGHT,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_TURN_BACK,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_FORWARD,
+    //     CONT_TURN_BACK,
+    //     CONT_FINISH
+    // };
+
     enum CONTROL_REQUEST requests[19] = {
-        CONT_FORWARD,
-        CONT_FORWARD,
-        CONT_FORWARD,
-        CONT_TURN_LEFT,
-        CONT_TURN_LEFT,
-        CONT_FORWARD,
-        CONT_FORWARD,
-        CONT_FORWARD,
-        CONT_TURN_RIGHT,
+        CONT_HALF_FORWARD,
+        CONT_HALF_FORWARD,
         CONT_TURN_RIGHT,
         CONT_FORWARD,
+        CONT_TURN_RIGHT,
         CONT_FORWARD,
-        CONT_FORWARD,
-        CONT_TURN_BACK,
-        CONT_FORWARD,
-        CONT_FORWARD,
+        CONT_TURN_LEFT,
         CONT_FORWARD,
         CONT_TURN_BACK,
         CONT_FINISH
     };
-
-    // enum CONTROL_REQUEST requests[19] = {
-    //     CONT_TURN_LEFT,
-    //     CONT_TURN_LEFT,
-    //     CONT_TURN_LEFT,
-    //     CONT_TURN_LEFT,
-    //     CONT_FINISH
-    // };
 
 
 
@@ -123,33 +128,59 @@ void requestAndWait(const enum CONTROL_REQUEST request){
 }
 
 void searchLefthand(void){
+    printf("search left hand\n");
     gControlRequest = CONT_NONE; // 待機状態
 
     //半区画進む
     requestAndWait(CONT_HALF_FORWARD);
 
+    int doHipAdjust = 0; // けつあて補正
     while(1){
         // 左手法なので、条件文の順番が重要である
         // 順番を変更してはいけない
         if(gIsWall[DIREC_LEFT] != 1){
+            printf("TURN LEFT\n");
             // 左に壁がなければ左に進む
+            if(gIsWall[DIREC_LEFT] == 1){
+                // 右に壁があればけつあて
+                doHipAdjust = 1;
+            }
             requestAndWait(CONT_HALF_FORWARD);
             requestAndWait(CONT_TURN_LEFT);
+            if(doHipAdjust){
+                // けつあて
+                requestAndWait(CONT_KETSUATE);
+                doHipAdjust = 0;
+            }
             requestAndWait(CONT_HALF_FORWARD);
         }else if(gIsWall[DIREC_FRONT] != 1){
+            printf("FORWARD\n");
             // 前に壁がなければ前に進む
-            requestAndWait(CONT_HALF_FORWARD);
+            requestAndWait(CONT_FORWARD);
 
         }else if(gIsWall[DIREC_RIGHT] != 1){
+            printf("TURN RIGHT\n");
             // 右に壁がなければ右に進む
+            if(gIsWall[DIREC_LEFT] == 1){
+                // 左に壁があればけつあて
+                doHipAdjust = 1;
+            }
             requestAndWait(CONT_HALF_FORWARD);
             requestAndWait(CONT_TURN_RIGHT);
+            if(doHipAdjust){
+                // けつあて
+                requestAndWait(CONT_KETSUATE);
+                doHipAdjust = 0;
+            }
             requestAndWait(CONT_HALF_FORWARD);
 
         }else{
+            printf("TURN BACK\n");
             // それ以外の場合は後ろに進む
             requestAndWait(CONT_HALF_FORWARD);
             requestAndWait(CONT_TURN_BACK);
+            // けつあて
+            requestAndWait(CONT_KETSUATE);
             requestAndWait(CONT_HALF_FORWARD);
 
         }
@@ -217,6 +248,10 @@ static void TaskMain(void *arg){
                     // motorTest();
                     // controlTest();
                     searchLefthand();
+                    // if(gControlRequest == CONT_FINISH || gControlRequest == CONT_NONE){
+                    //     // gControlRequest = CONT_FORWARD;
+                    //     gControlRequest = CONT_KETSUATE;
+                    // }
                 }
             }
 
@@ -229,11 +264,11 @@ static void TaskMain(void *arg){
         //         gWallVoltage[WALL_SENS_FR],
         //         gWallVoltage[WALL_SENS_R]);
 
-        printf("isWall:F,B,L,R : %d, %d, %d, %d\n", 
-                gIsWall[DIREC_FRONT], 
-                gIsWall[DIREC_BACK],
-                gIsWall[DIREC_LEFT],
-                gIsWall[DIREC_RIGHT]);
+        // printf("isWall:F,B,L,R : %d, %d, %d, %d\n", 
+        //         gIsWall[DIREC_FRONT], 
+        //         gIsWall[DIREC_BACK],
+        //         gIsWall[DIREC_LEFT],
+        //         gIsWall[DIREC_RIGHT]);
 
         // printf("encoder L:R %f:%f\n",gWheelAngle[LEFT], gWheelAngle[RIGHT]);
 
@@ -262,7 +297,7 @@ void app_main()
     xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
     xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
-    // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
+    xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
     xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 2, NULL);
 }
 

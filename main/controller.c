@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -17,6 +18,7 @@ typedef struct{
     float maxOmega;
     float accelSpeed;
     float accelOmega;
+    float invertSpeed;
     float invertOmega;
     int forceSpeedEnable;
     int forceOmegaEnable;
@@ -39,13 +41,21 @@ void updateController(control_t *control){
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
         // 強制的に目標速度を設定する
-        TargetSpeed = control->forceSpeed;
+        if(control->invertSpeed){
+            TargetSpeed = -control->forceSpeed;
+        }else{
+            TargetSpeed = control->forceSpeed;
+        }
     }else{
         // 目標速度を更新する
-        TargetSpeed += control->accelSpeed * 0.001; // 1 msec周期なので、加速度を1/1000倍する
+        if(control->invertSpeed){
+            TargetSpeed -= control->accelSpeed * 0.001; // 1 msec周期なので、加速度を1/1000倍する
+        }else{
+            TargetSpeed += control->accelSpeed * 0.001; // 1 msec周期なので、加速度を1/1000倍する
+        }
 
-        if(TargetSpeed > control->maxSpeed){
-            TargetSpeed = control->maxSpeed;
+        if(fabs(TargetSpeed) > control->maxSpeed){
+            TargetSpeed = copysign(control->maxSpeed, TargetSpeed);
         }
     }
     // 回転方向の速度更新
@@ -115,7 +125,7 @@ void updateController(control_t *control){
     gMotorDuty[LEFT] = 100.0 * MotorVoltage[LEFT] / gBatteryVoltage;
 }
 
-void goForward(const float targetDistance){
+int straight(const float targetDistance, const float timeout){
     const float MAX_SPEED = 0.5; // m/s
     const float MIN_SPEED = 0.2; // m/s
     const float ACCEL = 1.0; // m/s^2
@@ -125,19 +135,27 @@ void goForward(const float targetDistance){
     control_t control;
     control.maxSpeed = MAX_SPEED;
     control.maxOmega = 0;
+    control.invertSpeed = 0;
     control.invertOmega = 0;
     control.accelSpeed = 0;
     control.accelOmega = 0;
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
 
+    if(targetDistance < 0){
+        control.invertSpeed = 1;
+    }
+
     // 移動距離を初期化
     gMovingDistance = 0;
+
+    // 時間計測開始
+    clock_t startTime = clock();
 
     // 加速・定速
     control.accelSpeed = ACCEL;
     while(1){
-        remainingDistance = targetDistance - gMovingDistance - 0.010;
+        remainingDistance = fabs(targetDistance - gMovingDistance) - 0.010;
 
         // 残距離が停止距離より短かったら加速をやめる
         if(remainingDistance <= TargetSpeed*TargetSpeed / (2.0*control.accelSpeed)){
@@ -146,30 +164,47 @@ void goForward(const float targetDistance){
 
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            return 0;
+        }
     }
 
     // 減速
     control.accelSpeed = DECEL;
-    while(gMovingDistance < targetDistance - 0.001){
+    while(fabs(gMovingDistance) < fabs(targetDistance) - 0.001){
         // 一定速度まで減速したら、最低駆動トルクで走行
-        if(TargetSpeed <= MIN_SPEED){
+        if(fabs(TargetSpeed) <= MIN_SPEED){
             control.forceSpeed = MIN_SPEED;
             control.forceSpeedEnable = 1;
         }
 
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            return 0;
+        }
     }
 
 
     // 速度が0以下になるまで制御を続ける
-    while(gMeasuredSpeed >= 0.0){
+    while(fabs(gMeasuredSpeed) >= 0.01){
         control.forceSpeedEnable = 1;
         control.forceSpeed = 0;
 
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            return 0;
+        }
     }
+
+    return 1;
 }
 
 void turn(const float targetAngle){
@@ -183,6 +218,7 @@ void turn(const float targetAngle){
     control_t control;
     control.maxSpeed = 0;
     control.maxOmega = MAX_OMEGA;
+    control.invertSpeed = 0;
     control.invertOmega = 0;
     control.accelSpeed = 0;
     control.accelOmega = 0;
@@ -276,19 +312,20 @@ void doEnkai(void){
 
 void TaskControlMotion(void *arg){
     const int waitTime = 500;
+    const float TIME_OUT = 3.0; // sec
 
     while(1){
         switch(gControlRequest){
         case CONT_FORWARD:
             gMotorState = MOTOR_ON;
-            goForward(0.090);
+            straight(0.090, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_HALF_FORWARD:
             gMotorState = MOTOR_ON;
-            goForward(0.045);
+            straight(0.045, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
@@ -310,6 +347,16 @@ void TaskControlMotion(void *arg){
         case CONT_TURN_BACK:
             gMotorState = MOTOR_ON;
             turn(M_PI);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
+            stop(waitTime);
+            break;
+
+        case CONT_KETSUATE:
+            gMotorState = MOTOR_ON;
+            straight(-0.010, TIME_OUT);
+            stop(waitTime);
+            straight(0.010, TIME_OUT);
+            stop(waitTime);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
