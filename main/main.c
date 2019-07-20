@@ -113,6 +113,50 @@ static void controlTest(void){
     }
 }
 
+void requestAndWait(const enum CONTROL_REQUEST request){
+    // controllerへリクエストを送り、動作完了を待つ
+
+    gControlRequest = request;
+    while(gControlRequest != CONT_NONE){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+}
+
+void searchLefthand(void){
+    gControlRequest = CONT_NONE; // 待機状態
+
+    //半区画進む
+    requestAndWait(CONT_HALF_FORWARD);
+
+    while(1){
+        // 左手法なので、条件文の順番が重要である
+        // 順番を変更してはいけない
+        if(gIsWall[DIREC_LEFT] != 1){
+            // 左に壁がなければ左に進む
+            requestAndWait(CONT_HALF_FORWARD);
+            requestAndWait(CONT_TURN_LEFT);
+            requestAndWait(CONT_HALF_FORWARD);
+        }else if(gIsWall[DIREC_FRONT] != 1){
+            // 前に壁がなければ前に進む
+            requestAndWait(CONT_HALF_FORWARD);
+
+        }else if(gIsWall[DIREC_RIGHT] != 1){
+            // 右に壁がなければ右に進む
+            requestAndWait(CONT_HALF_FORWARD);
+            requestAndWait(CONT_TURN_RIGHT);
+            requestAndWait(CONT_HALF_FORWARD);
+
+        }else{
+            // それ以外の場合は後ろに進む
+            requestAndWait(CONT_HALF_FORWARD);
+            requestAndWait(CONT_TURN_BACK);
+            requestAndWait(CONT_HALF_FORWARD);
+
+        }
+    }
+
+}
+
 static void TaskMain(void *arg){
     gIndicatorValue = 0x01;
 
@@ -171,7 +215,8 @@ static void TaskMain(void *arg){
                     // turnBack(10);
                     // Maze();
                     // motorTest();
-                    controlTest();
+                    // controlTest();
+                    searchLefthand();
                 }
             }
 

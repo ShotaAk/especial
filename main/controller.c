@@ -280,37 +280,44 @@ void TaskControlMotion(void *arg){
     while(1){
         switch(gControlRequest){
         case CONT_FORWARD:
-            gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             goForward(0.090);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
+            stop(waitTime);
+            break;
+
+        case CONT_HALF_FORWARD:
+            gMotorState = MOTOR_ON;
+            goForward(0.045);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_TURN_LEFT:
-            gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(M_PI_2);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_TURN_RIGHT:
-            gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(-M_PI_2);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_TURN_BACK:
-            gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             turn(M_PI);
+            gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_ENKAI:
-            gControlRequest = CONT_NONE; // リクエスト受付開始
             gMotorState = MOTOR_ON;
             doEnkai();
+            gControlRequest = CONT_NONE; // リクエスト受付開始
             break;
 
         case CONT_NONE:
