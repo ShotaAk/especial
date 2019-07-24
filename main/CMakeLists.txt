@@ -5,6 +5,7 @@ set(COMPONENT_SRCS
     "encoder.c"
     "indicator.c"
     "motion.c"
+    "motor.c"
     "wall_detector.c"
     "parameters.c"
     "controller.c"
