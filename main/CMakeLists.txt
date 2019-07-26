@@ -1,4 +1,4 @@
-set(COMPONENT_SRCS 
+idf_component_register(SRCS
     "main.c"
     "variables.c"
     "battery.c"
@@ -9,7 +9,4 @@ set(COMPONENT_SRCS
     "wall_detector.c"
     "parameters.c"
     "controller.c"
-    )
-set(COMPONENT_ADD_INCLUDEDIRS ".")
-
-register_component()
+    INCLUDE_DIRS ".")
