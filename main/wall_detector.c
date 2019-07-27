@@ -116,11 +116,17 @@ void TaskDetectWall(void *arg){
     gpio_set_level(GPIO_RFLED_1, 0);
 
     uint32_t adc_readings[WALL_SENS_NUM] = {0};
+    uint32_t adc_offset[WALL_SENS_NUM] = {0};
     float wallVoltages[WALL_SENS_NUM] = {0};
     while (1) {
-        // LED ON
+
+       // 反射する前のセンサ値を取得(オフセット)
+       adc_offset[WALL_SENS_L] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_L]);
+       adc_offset[WALL_SENS_FR] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_FR]);
+       // LED ON
        gpio_set_level(GPIO_RFLED_0, 1);
-       // printf("06_TaskDetectWall\n");
+
+       // 壁に反射するまで待つ
        vTaskDelay(1 / portTICK_RATE_MS);
        // ADC
        adc_readings[WALL_SENS_L] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_L]);
@@ -129,9 +135,13 @@ void TaskDetectWall(void *arg){
        gpio_set_level(GPIO_RFLED_0, 0);
 
 
+       // 反射する前のセンサ値を取得(オフセット)
+       adc_offset[WALL_SENS_R] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_R]);
+       adc_offset[WALL_SENS_FL] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_FL]);
        // LED ON
        gpio_set_level(GPIO_RFLED_1, 1);
-       // printf("06_TaskDetectWall\n");
+
+       // 壁に反射するまで待つ
        vTaskDelay(1 / portTICK_RATE_MS);
        // ADC
        adc_readings[WALL_SENS_R] = adc1_get_raw((adc1_channel_t)channels[WALL_SENS_R]);
@@ -140,6 +150,15 @@ void TaskDetectWall(void *arg){
        gpio_set_level(GPIO_RFLED_1, 0);
 
        for(int adc_i=0; adc_i<WALL_SENS_NUM; adc_i++){
+           // printf("%d, value, offset: %d, %d\n", adc_i, adc_readings[adc_i], adc_offset[adc_i]);
+           // センサ値のオフセットを引く
+           if(adc_readings[adc_i] < adc_offset[adc_i]){
+               // アンダーフローを防ぐ
+               adc_readings[adc_i] = 0;
+           }else{
+               adc_readings[adc_i] -= adc_offset[adc_i];
+           }
+
            wallVoltages[adc_i] = 
                (float)esp_adc_cal_raw_to_voltage(adc_readings[adc_i], adc_chars) 
                * 0.001; // mVからVに変換する
