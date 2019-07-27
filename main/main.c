@@ -149,7 +149,7 @@ void searchLefthand(void){
         if(gIsWall[DIREC_LEFT] != 1){
             printf("TURN LEFT\n");
             // 左に壁がなければ左に進む
-            if(gIsWall[DIREC_LEFT] == 1){
+            if(gIsWall[DIREC_RIGHT] == 1){
                 // 右に壁があればけつあて
                 doHipAdjust = 1;
             }
@@ -266,11 +266,11 @@ static void TaskMain(void *arg){
         }
         // printf("ax, ay az: %f, %f, %f\n",gAccel[AXIS_X], gAccel[AXIS_Y], gAccel[AXIS_Z]);
         // printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
-        // printf("L, FL, FR, R: %f, %f, %f, %f\n", 
-        //         gWallVoltage[WALL_SENS_L], 
-        //         gWallVoltage[WALL_SENS_FL],
-        //         gWallVoltage[WALL_SENS_FR],
-        //         gWallVoltage[WALL_SENS_R]);
+        printf("L, FL, FR, R: %f, %f, %f, %f\n", 
+                gWallVoltage[WALL_SENS_L], 
+                gWallVoltage[WALL_SENS_FL],
+                gWallVoltage[WALL_SENS_FR],
+                gWallVoltage[WALL_SENS_R]);
 
         // printf("isWall:F,B,L,R : %d, %d, %d, %d\n", 
         //         gIsWall[DIREC_FRONT], 
