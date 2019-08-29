@@ -10,6 +10,9 @@
 #include "variables.h"
 #include "parameters.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Indicator";
 
 #define GPIO_LED0 22
 #define GPIO_LED1 23
@@ -34,6 +37,8 @@ void TaskIndicator(void *arg){
     gpio_set_level(GPIO_LED1, 0);
 
     bool ledToggle = false;
+
+    ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gBatteryVoltage > LOW_BATTERY_VOLTAGE){
             // バッテリー電圧があれば、モードを表示

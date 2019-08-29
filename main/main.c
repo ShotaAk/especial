@@ -23,6 +23,9 @@
 #include "wall_detector.h"
 #include "controller.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+
 static void motorTest(void){
     const int delayTime = 500; // ms
 
@@ -299,13 +302,17 @@ static void TaskMain(void *arg){
 
 void app_main()
 {
+    static const char *TAG="Startup";
+    ESP_LOGI(TAG, "Especial Power On.");
     xTaskCreate(TaskCheckBatteryVoltage, "TaskCheckBatteryVoltage", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
     xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 4, NULL);
-    xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 6, NULL);
+
+    ESP_LOGI(TAG, "Finish startup.");
+    // xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
+    // xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 6, NULL);
 }
 

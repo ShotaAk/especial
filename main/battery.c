@@ -8,6 +8,9 @@
 #include "battery.h"
 #include "variables.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Battery";
 
 const uint32_t DEFAULT_VREF = 1128;        //Use adc2_vref_to_gpio() to obtain a better estimate
 const int NO_OF_SAMPLES = 10;          //Multisampling
@@ -63,6 +66,7 @@ void TaskCheckBatteryVoltage(void *arg){
     print_char_val_type(val_type);
 
     //Continuously sample ADC1
+    ESP_LOGI(TAG, "Complete initialization.");
     while (1) {
         uint32_t adc_reading = 0;
         //Multisampling
