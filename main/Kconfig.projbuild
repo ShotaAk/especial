@@ -1,12 +1,12 @@
 menu "Especial Configuration"
-    config LED0_GPIO 
+    config LED0_GPIO
         int "Indicator LED0 GPIO number"
         range 0 34
         default 22
         help
             GPIO number of Indicator LED0
 
-    config LED1_GPIO 
+    config LED1_GPIO
         int "Indicator LED1 GPIO number"
         range 0 34
         default 23
