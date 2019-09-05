@@ -4,7 +4,7 @@
 const float TIRE_DIAMETER;
 const float TIRE_RADIUS;
 
-const float LOW_BATTERY_VOLTAGE;
+const float pLOW_BATTERY_VOLTAGE;
 
 
 #endif

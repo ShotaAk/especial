@@ -40,7 +40,7 @@ void TaskIndicator(void *arg){
 
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
-        if(gBatteryVoltage > LOW_BATTERY_VOLTAGE){
+        if(gObsBatteryIsLow == FALSE){
             // バッテリー電圧があれば、モードを表示
             gpio_set_level(LED1_GPIO, gIndicatorValue & 0x01);
             gpio_set_level(LED0_GPIO, (gIndicatorValue >> 1) & 0x01);

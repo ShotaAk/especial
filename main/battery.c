@@ -24,27 +24,27 @@ static void check_efuse()
 {
     //Check TP is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
-        ESP_LOGD("eFuse Two Point: Supported\n");
+        ESP_LOGD(TAG, "eFuse Two Point: Supported\n");
     } else {
-        ESP_LOGD("eFuse Two Point: NOT supported\n");
+        ESP_LOGD(TAG, "eFuse Two Point: NOT supported\n");
     }
 
     //Check Vref is burned into eFuse
     if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
-        ESP_LOGD("eFuse Vref: Supported\n");
+        ESP_LOGD(TAG,"eFuse Vref: Supported\n");
     } else {
-        ESP_LOGD("eFuse Vref: NOT supported\n");
+        ESP_LOGD(TAG,"eFuse Vref: NOT supported\n");
     }
 }
 
 static void print_char_val_type(esp_adc_cal_value_t val_type)
 {
     if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
-        ESP_LOGD("Characterized using Two Point Value\n");
+        ESP_LOGD(TAG,"Characterized using Two Point Value\n");
     } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
-        ESP_LOGD("Characterized using eFuse Vref\n");
+        ESP_LOGD(TAG,"Characterized using eFuse Vref\n");
     } else {
-        ESP_LOGD("Characterized using Default Vref\n");
+        ESP_LOGD(TAG,"Characterized using Default Vref\n");
     }
 }
 

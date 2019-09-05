@@ -15,6 +15,7 @@
 #include "freertos/queue.h"
 
 #include "variables.h"
+#include "parameters.h"
 #include "battery.h"
 #include "encoder.h"
 #include "indicator.h"
@@ -22,6 +23,7 @@
 #include "motor.h"
 #include "wall_detector.h"
 #include "controller.h"
+#include "observer.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
@@ -305,7 +307,18 @@ void app_main()
     static const char *TAG="Startup";
     ESP_LOGI(TAG, "Especial Power On.");
     xTaskCreate(TaskCheckBatteryVoltage, "TaskCheckBatteryVoltage", 4096, NULL, 5, NULL);
-    xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 4, NULL);
+    xTaskCreate(TaskIndicator, "TaskIndicator", 4096, NULL, 5, NULL);
+    xTaskCreate(TaskObservation, "TaskObservation", 4096, NULL, 5, NULL);
+    
+    // バッテリ電圧が安定するまでのwait
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    if(gObsBatteryIsLow){
+        ESP_LOGE(TAG, "Low battery voltage at startup. %f volts", gBatteryVoltage);
+    }else{
+        ESP_LOGI(TAG, "Start Especial Main Program");
+    }
+
 
     ESP_LOGI(TAG, "Finish startup.");
     // xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);

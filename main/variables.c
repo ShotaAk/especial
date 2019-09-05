@@ -22,3 +22,5 @@ int gIsWall[DIREC_NUM] = {0};
 float gMovingDistance = 0;
 
 enum CONTROL_REQUEST gControlRequest = CONT_FINISH;
+
+int gObsBatteryIsLow = 0;

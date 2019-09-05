@@ -9,4 +9,5 @@ idf_component_register(SRCS
     "wall_detector.c"
     "parameters.c"
     "controller.c"
+    "observer.c"
     INCLUDE_DIRS ".")

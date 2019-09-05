@@ -1,6 +1,9 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
+#define TRUE 1
+#define FALSE 0
+
 #define SIDE_NUM 2
 #define DIREC_NUM 4
 #define AXIS_NUM 3
@@ -67,5 +70,7 @@ extern int gIsWall[DIREC_NUM];
 extern float gMovingDistance; // meters
 
 extern enum CONTROL_REQUEST gControlRequest;
+
+extern int gObsBatteryIsLow; // 0 or 1
 
 #endif
