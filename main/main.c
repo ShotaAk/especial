@@ -313,6 +313,15 @@ void app_main()
     }else{
         ESP_LOGI(TAG, "Start Especial Main Program");
         xTaskCreate(TaskObjectSensing, "TaskObjectSensing", 4096, NULL, 5, NULL);
+
+        // センサーをタッチするまでwait
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+        if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
+            ESP_LOGI(TAG, "Start HTTP Server");
+        }else{
+            ESP_LOGI(TAG, "Start Especial Mouse");
+        }
     }
 
 

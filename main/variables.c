@@ -23,4 +23,7 @@ float gMovingDistance = 0;
 
 enum CONTROL_REQUEST gControlRequest = CONT_FINISH;
 
-int gObsBatteryIsLow = 0;
+int gObsBatteryIsLow = FALSE;
+int gObsTouch[SIDE_NUM] = {FALSE};
+
+
