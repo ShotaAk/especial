@@ -6,7 +6,7 @@ idf_component_register(SRCS
     "indicator.c"
     "motion.c"
     "motor.c"
-    "wall_detector.c"
+    "object_sensor.c"
     "parameters.c"
     "controller.c"
     "observer.c"

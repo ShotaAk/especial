@@ -27,6 +27,12 @@ void TaskObservation(void *arg){
         }
 
 
+        ESP_LOGI(TAG, "ObjVoltages L,FL,FR,R: %f,%f,%f,%f",
+                gObjVoltages[OBJ_SENS_L],
+                gObjVoltages[OBJ_SENS_FL],
+                gObjVoltages[OBJ_SENS_FR],
+                gObjVoltages[OBJ_SENS_R]);
+
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 

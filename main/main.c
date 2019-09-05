@@ -21,7 +21,7 @@
 #include "indicator.h"
 #include "motion.h"
 #include "motor.h"
-#include "wall_detector.h"
+#include "object_sensor.h"
 #include "controller.h"
 #include "observer.h"
 
@@ -212,10 +212,10 @@ static void TaskMain(void *arg){
 
     //　起動時のデバッグ
     const float thresh = 1.0;
-    if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+    if(gObjVoltages[OBJ_SENS_L] > thresh && gObjVoltages[OBJ_SENS_R] > thresh){
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         // ダブルチェック
-        if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+        if(gObjVoltages[OBJ_SENS_L] > thresh && gObjVoltages[OBJ_SENS_R] > thresh){
             for(int step=0; step<5; step++){
                 vTaskDelay(300 / portTICK_PERIOD_MS);
                 gIndicatorValue = 3;
@@ -242,11 +242,11 @@ static void TaskMain(void *arg){
 
         if(gIndicatorValue == 3){
             // モード選択
-            if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+            if(gObjVoltages[OBJ_SENS_L] > thresh && gObjVoltages[OBJ_SENS_R] > thresh){
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
 
                 // ダブルチェック
-                if(gWallVoltage[WALL_SENS_L] > thresh && gWallVoltage[WALL_SENS_R] > thresh){
+                if(gObjVoltages[OBJ_SENS_L] > thresh && gObjVoltages[OBJ_SENS_R] > thresh){
                     gIndicatorValue = 0;
                     vTaskDelay(300 / portTICK_PERIOD_MS);
                     gIndicatorValue = 3;
@@ -272,16 +272,11 @@ static void TaskMain(void *arg){
         // printf("ax, ay az: %f, %f, %f\n",gAccel[AXIS_X], gAccel[AXIS_Y], gAccel[AXIS_Z]);
         // printf("gx, gy gz: %f, %f, %f\n",gGyro[AXIS_X], gGyro[AXIS_Y], gGyro[AXIS_Z]);
         printf("L, FL, FR, R: %f, %f, %f, %f\n", 
-                gWallVoltage[WALL_SENS_L], 
-                gWallVoltage[WALL_SENS_FL],
-                gWallVoltage[WALL_SENS_FR],
-                gWallVoltage[WALL_SENS_R]);
+                gObjVoltages[OBJ_SENS_L], 
+                gObjVoltages[OBJ_SENS_FL],
+                gObjVoltages[OBJ_SENS_FR],
+                gObjVoltages[OBJ_SENS_R]);
 
-        // printf("isWall:F,B,L,R : %d, %d, %d, %d\n", 
-        //         gIsWall[DIREC_FRONT], 
-        //         gIsWall[DIREC_BACK],
-        //         gIsWall[DIREC_LEFT],
-        //         gIsWall[DIREC_RIGHT]);
 
         // printf("encoder L:R %f:%f\n",gWheelAngle[LEFT], gWheelAngle[RIGHT]);
 
@@ -317,6 +312,7 @@ void app_main()
         ESP_LOGE(TAG, "Low battery voltage at startup. %f volts", gBatteryVoltage);
     }else{
         ESP_LOGI(TAG, "Start Especial Main Program");
+        xTaskCreate(TaskObjectSensing, "TaskObjectSensing", 4096, NULL, 5, NULL);
     }
 
 
@@ -324,7 +320,6 @@ void app_main()
     // xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
-    // xTaskCreate(TaskDetectWall, "TaskDetectWall", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 6, NULL);
 }

@@ -7,7 +7,7 @@
 #define SIDE_NUM 2
 #define DIREC_NUM 4
 #define AXIS_NUM 3
-#define WALL_SENS_NUM 4
+#define OBJ_SENS_NUM 4
 
 enum SIDE{ RIGHT=0, LEFT};
 enum DIRECTION{
@@ -28,11 +28,11 @@ enum MOTOR_STATE{
     MOTOR_OFF
 };
 
-enum WALL_SENS{
-    WALL_SENS_FL,
-    WALL_SENS_L,
-    WALL_SENS_R,
-    WALL_SENS_FR,
+enum OBJ_SENS{
+    OBJ_SENS_FL,
+    OBJ_SENS_L,
+    OBJ_SENS_R,
+    OBJ_SENS_FR,
 };
 
 enum CONTROL_REQUEST{
@@ -64,7 +64,7 @@ extern int gIndicatorValue; // 0 ~ 3
 extern enum MOTOR_STATE gMotorState;
 extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
-extern float gWallVoltage[WALL_SENS_NUM]; // volts
+extern float gObjVoltages[OBJ_SENS_NUM]; // volts
 extern int gIsWall[DIREC_NUM];
 
 extern float gMovingDistance; // meters
