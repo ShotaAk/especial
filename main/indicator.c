@@ -14,8 +14,8 @@
 #include "esp_log.h"
 static const char *TAG="Indicator";
 
-#define LED0_GPIO CONFIG_LED0_GPIO
-#define LED1_GPIO CONFIG_LED1_GPIO
+#define LED0_GPIO 23 // CONFIG_LED0_GPIO
+#define LED1_GPIO 22 // CONFIG_LED1_GPIO
 
 void TaskIndicator(void *arg){
     gpio_config_t io_conf;
