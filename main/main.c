@@ -303,21 +303,30 @@ static void TaskMain(void *arg){
 static void TaskMain(void *arg){
     static const char *TAG="Main";
 
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
+        loggingLoadPrint();
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
 
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
 
         if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
-            loggingPrint();
+            loggingSave(); // SPIFFSに保存
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
             loggingReset();
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
         }else if(gObsTouch[LEFT]){
             loggingStop();
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
         }else if(gObsTouch[RIGHT]){
             if(loggingIsInitialized() == FALSE){
                 loggingInitialize(1, 3000,
                         "gObjVoltages_R", &gObjVoltages[OBJ_SENS_R]);
             }else{
                 loggingStart();
+                vTaskDelay(2000 / portTICK_PERIOD_MS);
             }
         }
 

@@ -10,6 +10,7 @@ extern int loggingIsInitialized(void);
 extern int loggingIsStarted(void);
 extern void loggingPrint(void);
 extern void loggingSave(void);
+extern void loggingLoadPrint(void);
 extern void TaskLogging(void *arg);
 
 #endif 
