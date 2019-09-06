@@ -170,7 +170,7 @@ void loggingLoadPrint(void){
 
     // １行目は文字列
     fscanf(f, "%[^,],%[^,],%s", stringBuf[0], stringBuf[1], stringBuf[2]);
-    printf("%s %s %s\n",stringBuf[0], stringBuf[1], stringBuf[2]);
+    printf("%s,%s,%s\n",stringBuf[0], stringBuf[1], stringBuf[2]);
 
 
     int ret;

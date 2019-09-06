@@ -356,12 +356,14 @@ void app_main()
 
         if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
             ESP_LOGI(TAG, "Start HTTP Server");
+            gIndicatorValue = 1; // LED点灯
         }else{
             ESP_LOGI(TAG, "Start Especial Mouse");
             xTaskCreate(TaskLogging, "TaskLogging", 4096, NULL, 5, NULL);
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
+            gIndicatorValue = 3; // LED点灯
         }
     }
 
