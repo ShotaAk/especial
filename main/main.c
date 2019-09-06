@@ -24,6 +24,7 @@
 #include "object_sensor.h"
 #include "controller.h"
 #include "observer.h"
+#include "logger.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
@@ -201,6 +202,7 @@ void searchLefthand(void){
 
 }
 
+/*
 static void TaskMain(void *arg){
     gIndicatorValue = 0x01;
 
@@ -296,6 +298,32 @@ static void TaskMain(void *arg){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
+*/
+
+static void TaskMain(void *arg){
+    static const char *TAG="Main";
+
+
+    ESP_LOGI(TAG, "Complete initialization.");
+    while(1){
+
+        if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
+            loggingPrint();
+            loggingReset();
+        }else if(gObsTouch[LEFT]){
+            loggingStop();
+        }else if(gObsTouch[RIGHT]){
+            if(loggingIsInitialized() == FALSE){
+                loggingInitialize(1, 3000,
+                        "gObjVoltages_R", &gObjVoltages[OBJ_SENS_R]);
+            }else{
+                loggingStart();
+            }
+        }
+
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
 
 void app_main()
 {
@@ -321,6 +349,10 @@ void app_main()
             ESP_LOGI(TAG, "Start HTTP Server");
         }else{
             ESP_LOGI(TAG, "Start Especial Mouse");
+            xTaskCreate(TaskLogging, "TaskLogging", 4096, NULL, 5, NULL);
+
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
         }
     }
 
@@ -330,6 +362,5 @@ void app_main()
     // xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
-    // xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 6, NULL);
 }
 

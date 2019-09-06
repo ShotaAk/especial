@@ -8,6 +8,7 @@
 #define DIREC_NUM 4
 #define AXIS_NUM 3
 #define OBJ_SENS_NUM 4
+#define LOG_NUM 4096
 
 enum SIDE{ RIGHT=0, LEFT};
 enum DIRECTION{
@@ -73,5 +74,8 @@ extern enum CONTROL_REQUEST gControlRequest;
 
 extern int gObsBatteryIsLow; // 0 or 1
 extern int gObsTouch[SIDE_NUM]; // 0 or 1
+
+extern float gLogData[LOG_NUM];
+extern int gLogTime[LOG_NUM];
 
 #endif
