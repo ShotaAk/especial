@@ -111,6 +111,37 @@ void angleObservation(void){
 }
 
 
+void dialObservation(void){
+    // エンコーダの値を使って、ダイアルを表現する
+    
+    const float THRESH = M_PI * 0.5;
+    const int DIAL_MAX = 9;
+    const int DIAL_MIN = 0;
+    
+    static float prevTriggerdAngle;
+
+    float currentAngle = gWheelAngle[RIGHT];
+    float diffAngle = normalize(currentAngle - prevTriggerdAngle);
+
+    ESP_LOGD(TAG, "DiffAngle: %f", diffAngle);
+    if(diffAngle > THRESH){
+        // インクリメント
+        gObsDial++;
+        prevTriggerdAngle = currentAngle;
+    }else if(diffAngle < -THRESH){
+        // デクリメント
+        gObsDial--;
+        prevTriggerdAngle = currentAngle;
+    }
+
+    // ダイアル操作はループさせる
+    if(gObsDial > DIAL_MAX){
+        gObsDial = DIAL_MIN;
+    }else if(gObsDial < DIAL_MIN){
+        gObsDial = DIAL_MAX;
+    }
+}
+
 void TaskObservation(void *arg){
     // 観測データを加工するタスク
 
@@ -121,6 +152,9 @@ void TaskObservation(void *arg){
         touchObservation();
         movingDistanceObservation();
         angleObservation();
+        dialObservation();
+
+        ESP_LOGI(TAG, "Dial: %d", gObsDial);
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
