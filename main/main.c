@@ -340,7 +340,31 @@ static void TaskMain(void *arg){
 
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
-        gIndicatorValue = gObsDial;
+        if(gCurrentMode == MODE_SELECT){
+            // モード選択
+            int mode = gObsDial;
+            // タッチセンサでモードを確定する
+            if(gObsTouch[RIGHT] && gObsTouch[LEFT]){
+                switch(mode){
+                case MODE0_SEARCH:
+                    ESP_LOGI(TAG, "SEARCH");
+                    break;
+                case MODE1_FAST_RUN:
+                    ESP_LOGI(TAG, "FAST_RUN");
+                    break;
+                case MODE2_CONFIG:
+                    ESP_LOGI(TAG, "CONFIG");
+                    break;
+                case MODE3_DEBUG:
+                    ESP_LOGI(TAG, "DEBUG");
+                    break;
+                default:
+                    ESP_LOGI(TAG, "ELSE");
+                    break;
+                }
+            }
+            gIndicatorValue = mode;
+        }
 
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }

@@ -1,6 +1,8 @@
 
 #include "variables.h"
 
+enum MODE gCurrentMode = MODE_SELECT;
+
 float gAccel[AXIS_NUM] = {0};
 float gGyro[AXIS_NUM] = {0};
 int gGyroBiasResetRequest; // 0 or 1

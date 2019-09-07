@@ -49,6 +49,21 @@ enum CONTROL_REQUEST{
     CONT_FINISH,
 };
 
+enum MODE{
+    MODE0_SEARCH = 0,
+    MODE1_FAST_RUN,
+    MODE2_CONFIG,
+    MODE3_DEBUG,
+    MODE4_DUMMY,
+    MODE5_DUMMY,
+    MODE6_DUMMY,
+    MODE7_DUMMY,
+    MODE8_DUMMY,
+    MODE9_DUMMY,
+    MODE_SELECT
+};
+
+extern enum MODE gCurrentMode;
 
 extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
 extern float gGyro[AXIS_NUM]; // radians/sec
