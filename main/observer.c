@@ -74,7 +74,7 @@ void movingDistanceObservation(void){
     diffAngle[LEFT] *= -1.0;
 
     // 走行距離を加算
-    gObsMovingDistance += TIRE_RADIUS * (diffAngle[LEFT]+ diffAngle[RIGHT]) / 2.0;
+    gObsMovingDistance += pTIRE_RADIUS * (diffAngle[LEFT]+ diffAngle[RIGHT]) / 2.0;
 
     // タイヤの角速度を計算
     float angularVelocity[SIDE_NUM];
@@ -82,8 +82,8 @@ void movingDistanceObservation(void){
     angularVelocity[RIGHT] = diffAngle[RIGHT] / diffTime;
     // 角速度をタイヤの周速度に変換
     float velocity[SIDE_NUM];
-    velocity[LEFT] = angularVelocity[LEFT] * TIRE_RADIUS;
-    velocity[RIGHT] = angularVelocity[RIGHT] * TIRE_RADIUS;
+    velocity[LEFT] = angularVelocity[LEFT] * pTIRE_RADIUS;
+    velocity[RIGHT] = angularVelocity[RIGHT] * pTIRE_RADIUS;
     // ローパスフィルタをかける
     velocity[LEFT] = velocity[LEFT] * 0.1 + prevVelocity[LEFT] * 0.9;
     velocity[RIGHT] = velocity[RIGHT] * 0.1 + prevVelocity[RIGHT] * 0.9;
