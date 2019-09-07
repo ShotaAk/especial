@@ -14,8 +14,8 @@
 #include "esp_log.h"
 static const char *TAG="Indicator";
 
-#define LED0_GPIO 23 // CONFIG_LED0_GPIO
-#define LED1_GPIO 22 // CONFIG_LED1_GPIO
+#define LED0_GPIO 22 // CONFIG_LED0_GPIO
+#define LED1_GPIO 23 // CONFIG_LED1_GPIO
 
 void TaskIndicator(void *arg){
     gpio_config_t io_conf;
@@ -41,10 +41,30 @@ void TaskIndicator(void *arg){
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gObsBatteryIsLow == FALSE){
-            // バッテリー電圧があれば、モードを表示
-            gpio_set_level(LED1_GPIO, gIndicatorValue & 0x01);
-            gpio_set_level(LED0_GPIO, (gIndicatorValue >> 1) & 0x01);
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            // バッテリー電圧があれば、0 ~ 9の数値を表示
+            if(0 <= gIndicatorValue && gIndicatorValue <= 3){
+                gpio_set_level(LED1_GPIO, gIndicatorValue & 0x01);
+                gpio_set_level(LED0_GPIO, (gIndicatorValue >> 1) & 0x01);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }else if(4 <= gIndicatorValue && gIndicatorValue <= 6){
+                gpio_set_level(LED1_GPIO, (gIndicatorValue+1) & 0x01);
+                gpio_set_level(LED0_GPIO, ((gIndicatorValue+1) >> 1) & 0x01);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+                gpio_set_level(LED1_GPIO, 0);
+                gpio_set_level(LED0_GPIO, 0);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }else if(7 <= gIndicatorValue && gIndicatorValue <= 9){
+                gpio_set_level(LED1_GPIO, (gIndicatorValue+2) & 0x01);
+                gpio_set_level(LED0_GPIO, ((gIndicatorValue+2) >> 1) & 0x01);
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+                gpio_set_level(LED1_GPIO, 0);
+                gpio_set_level(LED0_GPIO, 0);
+                vTaskDelay(50 / portTICK_PERIOD_MS);
+            }else{
+                gpio_set_level(LED1_GPIO, 0);
+                gpio_set_level(LED0_GPIO, 0);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            }
         }else{
             // 電圧がなければ、点滅させる
             if(ledToggle){
@@ -56,7 +76,7 @@ void TaskIndicator(void *arg){
             }
 
             ledToggle = !ledToggle;
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
         }
     }
 }

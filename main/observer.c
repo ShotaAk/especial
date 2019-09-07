@@ -154,7 +154,7 @@ void TaskObservation(void *arg){
         angleObservation();
         dialObservation();
 
-        ESP_LOGI(TAG, "Dial: %d", gObsDial);
+        ESP_LOGD(TAG, "Dial: %d", gObsDial);
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }

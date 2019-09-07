@@ -300,8 +300,8 @@ static void TaskMain(void *arg){
 }
 */
 
-static void TaskMain(void *arg){
-    static const char *TAG="Main";
+void loggingTest(void){
+    static const char *TAG="LoggingTest";
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
@@ -330,6 +330,17 @@ static void TaskMain(void *arg){
                 vTaskDelay(2000 / portTICK_PERIOD_MS);
             }
         }
+
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+static void TaskMain(void *arg){
+    static const char *TAG="Main";
+
+    ESP_LOGI(TAG, "Complete initialization.");
+    while(1){
+        gIndicatorValue = gObsDial;
 
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
@@ -364,10 +375,10 @@ void app_main()
             xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
             xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
             xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
+            gIndicatorValue = 9; // LED点灯
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
-            gIndicatorValue = 3; // LED点灯
         }
     }
 
