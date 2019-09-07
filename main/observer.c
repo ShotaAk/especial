@@ -16,6 +16,19 @@
 static const char *TAG="Observer";
 
 
+float normalize(const float angle){
+    float normalizedAngle = angle;
+
+    while(normalizedAngle > M_PI){
+        normalizedAngle -= 2.0*M_PI;
+    }
+    while(normalizedAngle < -M_PI){
+        normalizedAngle += 2.0*M_PI;
+    }
+
+    return normalizedAngle;
+}
+
 void batteryObservation(void){
     // バッテリ電圧の計測
     if(gBatteryVoltage < pLOW_BATTERY_VOLTAGE){
@@ -44,21 +57,8 @@ void touchObservation(void){
     }
 }
 
-float normalize(const float angle){
-    float normalizedAngle = angle;
-
-    while(normalizedAngle > M_PI){
-        normalizedAngle -= 2.0*M_PI;
-    }
-    while(normalizedAngle < -M_PI){
-        normalizedAngle += 2.0*M_PI;
-    }
-
-    return normalizedAngle;
-}
-
 void movingDistanceObservation(void){
-    // エンコーダの値から走行距離を計算する
+    // エンコーダの値から走行距離と走行速度を計算する
     static float prevLeft, prevRight;
     static float prevVelocity[SIDE_NUM];
     static double prevTime;
@@ -98,6 +98,18 @@ void movingDistanceObservation(void){
     prevVelocity[RIGHT] = velocity[RIGHT];
 }
 
+void angleObservation(void){
+    // ジャイロの値から現在角度を取得する
+    static double prevTime;
+
+    float currentTime = (float)clock() / (float)CLOCKS_PER_SEC;
+    double diffTime = currentTime - prevTime;
+
+    gObsAngle += diffTime * gGyro[AXIS_Z];
+
+    prevTime = currentTime;
+}
+
 
 void TaskObservation(void *arg){
     // 観測データを加工するタスク
@@ -108,6 +120,7 @@ void TaskObservation(void *arg){
         batteryObservation();
         touchObservation();
         movingDistanceObservation();
+        angleObservation();
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }

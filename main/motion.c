@@ -6,11 +6,13 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "driver/spi_master.h"
-#include "driver/timer.h"
 
 #include "motion.h"
 #include "variables.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Motion";
 
 #define GPIO_VSPI_MISO 21
 #define GPIO_VSPI_MOSI 19
@@ -19,10 +21,6 @@
 
 #define READ_FLAG    0x80
 
-#define TIMER_DIVIDER  16  //  Hardware timer clock divider
-#define TIMER_SCALE    (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
-#define TIMER_GROUP    TIMER_GROUP_0
-#define TIMER_ID       TIMER_1
 
 const uint8_t ADDR_WHO_AM_I = 0x00;
 const uint8_t ADDR_PWR_MGMT_1 = 0x06;
@@ -116,7 +114,7 @@ void device_init(spi_device_handle_t spi){
     recv_data = write1byte(spi, ADDR2_GYRO_CONFIG1, send_data);
     vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     recv_data = read1byte(spi, ADDR2_GYRO_CONFIG1);
-    printf("GYRO CONFIG: %02X\n", recv_data);
+    ESP_LOGI(TAG, "GYRO CONFIG: %02X\n", recv_data);
 
     // USER BANKの切り替え
     vTaskDelay(10 / portTICK_PERIOD_MS); // wait
@@ -136,7 +134,7 @@ void device_init(spi_device_handle_t spi){
     // SLEEP解除確認
     vTaskDelay(10 / portTICK_PERIOD_MS); // wait
     recv_data = read1byte(spi, ADDR_PWR_MGMT_1);
-    printf("after PWR_MGMT_1: %02X\n", recv_data);
+    ESP_LOGI(TAG, "after PWR_MGMT_1: %02X\n", recv_data);
 
 }
 
@@ -144,7 +142,6 @@ float get_accel(spi_device_handle_t spi, enum AXIS axis){
     uint8_t accel_h = read1byte(spi, ADDR_ACCEL_OUT_H[axis]);
     uint8_t accel_l = read1byte(spi, ADDR_ACCEL_OUT_L[axis]);
 
-    // printf("AXIS: %d: accel_h, accel_l: %02X, %02X\n", axis, accel_h, accel_l);
     int16_t accel = (accel_h << 8) | accel_l;
 
     return (float)accel / ACCEL_SENSITIVITY;
@@ -157,17 +154,6 @@ float get_gyro(spi_device_handle_t spi, enum AXIS axis){
     int16_t gyro = (gyro_h << 8) | gyro_l;
 
     return (float)gyro / GYRO_SENSITIVITY[GYRO_FS_SEL];
-}
-
-void updateMeasuredAngle(const float gyroZ, const double currentTime){
-    static double prevTime;
-
-    double diffTime = currentTime - prevTime;
-
-    // printf("gyro: %f\n", gyroZ);
-    gMeasuredAngle += diffTime * gyroZ;
-
-    prevTime = currentTime;
 }
 
 void updateBias(spi_device_handle_t spi, const int times){
@@ -183,8 +169,9 @@ void updateBias(spi_device_handle_t spi, const int times){
     for(int axis_i=0; axis_i<AXIS_NUM; axis_i++){
         biasGyro[axis_i] = sumGyro[axis_i] / (float)times;
     }
-    printf("biasyGyro X, Y, Z: %f, %f, %f\n",biasGyro[AXIS_X], biasGyro[AXIS_Y], biasGyro[AXIS_Z]);
+    ESP_LOGI(TAG, "biasyGyro X, Y, Z: %f, %f, %f\n",biasGyro[AXIS_X], biasGyro[AXIS_Y], biasGyro[AXIS_Z]);
 }
+
 
 void TaskReadMotion(void *arg){
     esp_err_t ret;
@@ -211,24 +198,11 @@ void TaskReadMotion(void *arg){
 
     device_init(spi);
 
-    // Initialize Timer
-    timer_config_t config;
-    config.divider = TIMER_DIVIDER;
-    config.counter_dir = TIMER_COUNT_UP;
-    config.counter_en = TIMER_PAUSE;
-    config.alarm_en = TIMER_ALARM_DIS;
-    config.intr_type = TIMER_INTR_LEVEL;
-    config.auto_reload = 1;
-    timer_init(TIMER_GROUP, TIMER_ID, &config);
-    /* Timer's counter will initially start from value below.
-       Also, if auto_reload is set, this value will be automatically reload on alarm */
-    timer_set_counter_value(TIMER_GROUP, TIMER_ID, 0x00000000ULL);
-    timer_start(TIMER_GROUP, TIMER_ID);
 
     // ジャイロののドリフト解消
     updateBias(spi, 1000);
 
-    double currentTime;
+    ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gGyroBiasResetRequest){
             updateBias(spi, 1000);
@@ -244,11 +218,6 @@ void TaskReadMotion(void *arg){
         gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y)) - biasGyro[AXIS_Y];
         gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z)) - biasGyro[AXIS_Z];
 
-        // 時間取得
-        timer_get_counter_time_sec(TIMER_GROUP, TIMER_ID, &currentTime);
-        updateMeasuredAngle(gGyro[AXIS_Z], currentTime);
-
-        // printf("04_TaskReadMotion\n");
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }

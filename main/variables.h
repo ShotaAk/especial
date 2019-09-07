@@ -76,6 +76,7 @@ extern int gObsBatteryIsLow; // 0 or 1
 extern int gObsTouch[SIDE_NUM]; // 0 or 1
 extern float gObsMovingDistance; // meters
 extern float gObsSpeed; // m/s
+extern float gObsAngle; // radians
 
 extern float gLogData[LOG_NUM];
 extern int gLogTime[LOG_NUM];
