@@ -57,6 +57,35 @@ void touchObservation(void){
     }
 }
 
+void wallObservation(void){
+    // Object Sensorで壁を検出する
+    const float THRESH_VOLTAGES[DIREC_NUM] = {
+        [DIREC_FRONT] = 0.14, 
+        [DIREC_LEFT]  = 0.15, 
+        [DIREC_RIGHT] = 0.15, 
+        [DIREC_BACK]  = 0.5}; // V
+
+
+    if(gObjVoltages[OBJ_SENS_L] > THRESH_VOLTAGES[DIREC_LEFT]){
+        gObsIsWall[DIREC_LEFT] = TRUE;
+    }else{
+        gObsIsWall[DIREC_LEFT] = FALSE;
+    }
+
+    if(gObjVoltages[OBJ_SENS_R] > THRESH_VOLTAGES[DIREC_RIGHT]){
+        gObsIsWall[DIREC_RIGHT] = TRUE;
+    }else{
+        gObsIsWall[DIREC_RIGHT] = FALSE;
+    }
+
+    if( (gObjVoltages[OBJ_SENS_FL] + gObjVoltages[OBJ_SENS_FR]) * 0.5 
+            > THRESH_VOLTAGES[DIREC_FRONT]){
+        gObsIsWall[DIREC_FRONT] = TRUE;
+    }else{
+        gObsIsWall[DIREC_FRONT] = FALSE;
+    }
+}
+
 void movingDistanceObservation(void){
     // エンコーダの値から走行距離と走行速度を計算する
     static float prevLeft, prevRight;
@@ -153,6 +182,7 @@ void TaskObservation(void *arg){
         movingDistanceObservation();
         angleObservation();
         dialObservation();
+        wallObservation();
 
         ESP_LOGD(TAG, "Dial: %d", gObsDial);
 

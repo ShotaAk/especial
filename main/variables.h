@@ -93,6 +93,7 @@ extern float gObsMovingDistance; // meters
 extern float gObsSpeed; // m/s
 extern float gObsAngle; // radians
 extern int gObsDial; // 0~9
+extern int gObsIsWall[DIREC_NUM]; // 0 or 1
 
 extern float gLogData[LOG_NUM];
 extern int gLogTime[LOG_NUM];

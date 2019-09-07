@@ -335,6 +335,18 @@ void loggingTest(void){
     }
 }
 
+void Debug(void){
+    static const char *TAG="Debug";
+    while(1){
+        ESP_LOGI(TAG, "Wall: %d,%d,%d", gObsIsWall[DIREC_LEFT], gObsIsWall[DIREC_FRONT], gObsIsWall[DIREC_RIGHT]);
+        // ESP_LOGI(TAG, "WallVolt: %f,%f,%f,%f",
+                // gObjVoltages[OBJ_SENS_L], gObjVoltages[OBJ_SENS_FL],
+                // gObjVoltages[OBJ_SENS_FR], gObjVoltages[OBJ_SENS_R]);
+
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+}
+
 static void TaskMain(void *arg){
     static const char *TAG="Main";
 
@@ -357,6 +369,7 @@ static void TaskMain(void *arg){
                     break;
                 case MODE3_DEBUG:
                     ESP_LOGI(TAG, "DEBUG");
+                    Debug();
                     break;
                 default:
                     ESP_LOGI(TAG, "ELSE");
