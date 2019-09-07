@@ -313,7 +313,8 @@ static void TaskMain(void *arg){
     while(1){
 
         if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
-            loggingSave(); // SPIFFSに保存
+            // loggingSave(); // SPIFFSに保存
+            loggingPrint();
             vTaskDelay(2000 / portTICK_PERIOD_MS);
             loggingReset();
             vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -323,7 +324,7 @@ static void TaskMain(void *arg){
         }else if(gObsTouch[RIGHT]){
             if(loggingIsInitialized() == FALSE){
                 loggingInitialize(1, 3000,
-                        "gObjVoltages_R", &gObjVoltages[OBJ_SENS_R]);
+                        "gObsSpeed", &gObsSpeed);
             }else{
                 loggingStart();
                 vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -361,6 +362,7 @@ void app_main()
             ESP_LOGI(TAG, "Start Especial Mouse");
             xTaskCreate(TaskLogging, "TaskLogging", 4096, NULL, 5, NULL);
 
+            xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
             gIndicatorValue = 3; // LED点灯
@@ -369,7 +371,6 @@ void app_main()
 
 
     ESP_LOGI(TAG, "Finish startup.");
-    // xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);

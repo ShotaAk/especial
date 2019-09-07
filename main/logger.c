@@ -210,6 +210,10 @@ void TaskLogging(void *arg){
                 gLogData[logIndex] = *pLogData1;
                 logIndex++;
             }else{
+                // データ容量が満杯になったので終了
+                ESP_LOGI(TAG, "Finished.");
+                logPeriod_msec = INIT_PERIOD_MSEC;
+                logTimeout_msec = INIT_TIMEOUT_MSEC;
                 logStarted = FALSE;
             }
 

@@ -25,6 +25,8 @@ enum CONTROL_REQUEST gControlRequest = CONT_FINISH;
 
 int gObsBatteryIsLow = FALSE;
 int gObsTouch[SIDE_NUM] = {FALSE};
+float gObsMovingDistance = 0;
+float gObsSpeed = 0;
 
 float gLogData[LOG_NUM] = {0};
 int gLogTime[LOG_NUM] = {0};
