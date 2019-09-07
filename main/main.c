@@ -363,6 +363,7 @@ void app_main()
             xTaskCreate(TaskLogging, "TaskLogging", 4096, NULL, 5, NULL);
             xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
             xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
+            xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
 
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
@@ -372,7 +373,6 @@ void app_main()
 
 
     ESP_LOGI(TAG, "Finish startup.");
-    // xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
     // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
 }
 

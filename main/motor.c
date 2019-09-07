@@ -12,6 +12,10 @@
 #include "variables.h"
 #include "motor.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Motor";
+
 #define GPIO_PWM0A_OUT 17   //Set GPIO 15 as PWM0A
 #define GPIO_PWM0B_OUT 16   //Set GPIO 16 as PWM0B
 
@@ -27,7 +31,7 @@ static mcpwm_timer_t MC_TIMER[SIDE_NUM];
 
 static void mcpwm_example_gpio_initialize()
 {
-    printf("initializing mcpwm gpio...\n");
+    ESP_LOGI(TAG, "initializing mcpwm gpio...\n");
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, GPIO_PWM0A_OUT);
     mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, GPIO_PWM0B_OUT);
 
@@ -110,7 +114,7 @@ void TaskMotorDrive(void *arg)
     mcpwm_example_gpio_initialize();
 
     //2. initial mcpwm configuration
-    printf("Configuring Initial Parameters of mcpwm...\n");
+    ESP_LOGI(TAG, "Configuring Initial Parameters of mcpwm...\n");
     mcpwm_config_t pwm_config;
     pwm_config.frequency = 100*1000;    //frequency = 100kHz,
     pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
@@ -137,7 +141,6 @@ void TaskMotorDrive(void *arg)
             brushed_motor_stop(MCPWM_UNIT_0, MC_TIMER[LEFT]);
         }
 
-        // printf("05_TaskMotor\n");
         vTaskDelay(1 / portTICK_RATE_MS);
     }
 }
