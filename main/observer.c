@@ -40,17 +40,15 @@ void batteryObservation(void){
 
 void touchObservation(void){
     // Object Sensorをタッチセンサーとして使用する
-    const float TOUCH_THRESH_VOLTAGE = 1.8; // Volts
+    const float TOUCH_THRESH_VOLTAGE = 1.0; // Volts
 
-    if(gObjVoltages[OBJ_SENS_L] > TOUCH_THRESH_VOLTAGE
-            && gObjVoltages[OBJ_SENS_FL] > TOUCH_THRESH_VOLTAGE){
+    if(gObjVoltages[OBJ_SENS_FL] > TOUCH_THRESH_VOLTAGE){
         gObsTouch[LEFT] = TRUE;
     }else{
         gObsTouch[LEFT] = FALSE;
     }
 
-    if(gObjVoltages[OBJ_SENS_R] > TOUCH_THRESH_VOLTAGE
-            && gObjVoltages[OBJ_SENS_FR] > TOUCH_THRESH_VOLTAGE){
+    if(gObjVoltages[OBJ_SENS_FR] > TOUCH_THRESH_VOLTAGE){
         gObsTouch[RIGHT] = TRUE;
     }else{
         gObsTouch[RIGHT] = FALSE;

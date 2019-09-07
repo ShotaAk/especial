@@ -401,7 +401,7 @@ void app_main()
         xTaskCreate(TaskObjectSensing, "TaskObjectSensing", 4096, NULL, 5, NULL);
 
         // センサーをタッチするまでwait
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
 
         if(gObsTouch[LEFT] && gObsTouch[RIGHT]){
             ESP_LOGI(TAG, "Start HTTP Server");
@@ -412,15 +412,15 @@ void app_main()
             xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
             xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
             xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
+            xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
             gIndicatorValue = 9; // LED点灯
 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
         }
     }
 
 
     ESP_LOGI(TAG, "Finish startup.");
-    // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
 }
 
