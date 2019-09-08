@@ -141,7 +141,7 @@ void angleObservation(void){
 void dialObservation(void){
     // エンコーダの値を使って、ダイアルを表現する
     
-    const float THRESH = M_PI * 0.5;
+    const float THRESH = M_PI * 0.25;
     const int DIAL_MAX = 9;
     const int DIAL_MIN = 0;
     
