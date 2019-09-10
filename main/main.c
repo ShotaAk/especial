@@ -337,13 +337,25 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
+    int flagOnce = 0;
     while(1){
-        ESP_LOGI(TAG, "Wall: %d,%d,%d", gObsIsWall[DIREC_LEFT], gObsIsWall[DIREC_FRONT], gObsIsWall[DIREC_RIGHT]);
+        if(flagOnce){
+            break;
+        }
+        gMotorState = MOTOR_ON;
+        int result = straight(0.090, 0.2, 0.5);
+        ESP_LOGI(TAG, "Result is %d",result);
+        // ESP_LOGI(TAG, "Wall: %d,%d,%d", gObsIsWall[DIREC_LEFT], gObsIsWall[DIREC_FRONT], gObsIsWall[DIREC_RIGHT]);
         // ESP_LOGI(TAG, "WallVolt: %f,%f,%f,%f",
                 // gObjVoltages[OBJ_SENS_L], gObjVoltages[OBJ_SENS_FL],
                 // gObjVoltages[OBJ_SENS_FR], gObjVoltages[OBJ_SENS_R]);
 
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        flagOnce = 1;
+        // 制御終了状態
+        gMotorState = MOTOR_OFF;
+        gMotorDuty[RIGHT] = 0;
+        gMotorDuty[LEFT] = 0;
     }
 }
 
@@ -412,7 +424,7 @@ void app_main()
             xTaskCreate(TaskReadEncoders, "TaskReadEncoders", 4096, NULL, 5, NULL);
             xTaskCreate(TaskReadMotion, "TaskReadMotion", 4096, NULL, 5, NULL);
             xTaskCreate(TaskMotorDrive, "TaskMotorDrive", 4096, NULL, 5, NULL);
-            xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
+            // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
             gIndicatorValue = 9; // LED点灯
 
             vTaskDelay(500 / portTICK_PERIOD_MS);

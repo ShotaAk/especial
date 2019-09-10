@@ -10,6 +10,10 @@
 #include "variables.h"
 #include "parameters.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Controller";
+
 static float TargetSpeed = 0;
 static float TargetOmega = 0;
 
@@ -85,7 +89,7 @@ void updateController(control_t *control){
     float MotorVoltage[SIDE_NUM] = {0};
 
     // フィードバック制御
-    float speedError = TargetSpeed - gMeasuredSpeed;
+    float speedError = TargetSpeed - gObsSpeed;
     float omegaError = TargetOmega - gGyro[AXIS_Z];
 
     const float ERROR_MAX = 1.0e+10;
@@ -147,7 +151,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     }
 
     // 移動距離を初期化
-    gMovingDistance = 0;
+    gObsMovingDistance = 0;
 
     // 時間計測開始
     clock_t startTime = clock();
@@ -155,7 +159,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     // 加速・定速
     control.accelSpeed = ACCEL;
     while(1){
-        remainingDistance = fabs(targetDistance - gMovingDistance) - 0.010;
+        remainingDistance = fabs(targetDistance - gObsMovingDistance) - 0.010;
 
         // 残距離が減速距離より短かったら加速をやめる
         if(remainingDistance <= 
@@ -168,13 +172,14 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
 
         // タイムアウトチェック
         if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
-            return 0;
+            ESP_LOGI(TAG, "Timeout at accelereation");
+            return FALSE;
         }
     }
 
     // 減速
     control.accelSpeed = DECEL;
-    while(fabs(gMovingDistance) < fabs(targetDistance)){
+    while(fabs(gObsMovingDistance) < fabs(targetDistance)){
         // 目標速度が終端速度よりも小さくなったら、加速度(減速度)を0にする
         if(fabs(TargetSpeed) <= fabs(endSpeed)){
             control.accelSpeed = 0;
@@ -185,11 +190,12 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
 
         // タイムアウトチェック
         if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
-            return 0;
+            ESP_LOGI(TAG, "Timeout at deceleration");
+            return FALSE;
         }
     }
 
-    return 1;
+    return TRUE;
 }
 
 int straightAndStop(const float targetDistance, const float timeout){
@@ -215,7 +221,7 @@ int straightAndStop(const float targetDistance, const float timeout){
     }
 
     // 移動距離を初期化
-    gMovingDistance = 0;
+    gObsMovingDistance = 0;
 
     // 時間計測開始
     clock_t startTime = clock();
@@ -223,7 +229,7 @@ int straightAndStop(const float targetDistance, const float timeout){
     // 加速・定速
     control.accelSpeed = ACCEL;
     while(1){
-        remainingDistance = fabs(targetDistance - gMovingDistance) - 0.010;
+        remainingDistance = fabs(targetDistance - gObsMovingDistance) - 0.010;
 
         // 残距離が停止距離より短かったら加速をやめる
         if(remainingDistance <= TargetSpeed*TargetSpeed / (2.0*control.accelSpeed)){
@@ -241,7 +247,7 @@ int straightAndStop(const float targetDistance, const float timeout){
 
     // 減速
     control.accelSpeed = DECEL;
-    while(fabs(gMovingDistance) < fabs(targetDistance) - 0.001){
+    while(fabs(gObsMovingDistance) < fabs(targetDistance) - 0.001){
         // 一定速度まで減速したら、最低駆動トルクで走行
         if(fabs(TargetSpeed) <= MIN_SPEED){
             control.forceSpeed = MIN_SPEED;
@@ -259,7 +265,7 @@ int straightAndStop(const float targetDistance, const float timeout){
 
 
     // 速度が0以下になるまで制御を続ける
-    while(fabs(gMeasuredSpeed) >= 0.01){
+    while(fabs(gObsSpeed) >= 0.01){
         control.forceSpeedEnable = 1;
         control.forceSpeed = 0;
 
@@ -293,7 +299,7 @@ void turn(const float targetAngle){
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
 
-    float startAngle = gMeasuredAngle; // 制御開始前の角度取得
+    float startAngle = gObsAngle; // 制御開始前の角度取得
 
     if(targetAngle < 0){
         control.invertOmega = 1;
@@ -302,7 +308,7 @@ void turn(const float targetAngle){
     // 加速・定速
     control.accelOmega = ACCEL;
     while(1){
-        remainingAngle = fabs(targetAngle - (gMeasuredAngle - startAngle));
+        remainingAngle = fabs(targetAngle - (gObsAngle - startAngle));
 
         // 残角度が停止角度より短かったら加速をやめる
         if(remainingAngle <= TargetOmega*TargetOmega / (2.0*control.accelOmega)){
@@ -316,14 +322,14 @@ void turn(const float targetAngle){
 
     // 減速
     control.accelOmega = DECEL;
-    while(fabs((gMeasuredAngle - startAngle)) < fabs(targetAngle) - M_PI*0.01){
+    while(fabs((gObsAngle - startAngle)) < fabs(targetAngle) - M_PI*0.01){
         // 一定速度まで減速したら、最低駆動トルクで走行
         if(fabs(TargetOmega) <= MIN_OMEGA){
             control.forceOmega = MIN_OMEGA;
             control.forceOmegaEnable = 1;
         }
 
-        // printf("moveAngle %f\n", gMeasuredAngle - startAngle);
+        // printf("moveAngle %f\n", gObsAngle - startAngle);
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
