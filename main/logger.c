@@ -87,13 +87,13 @@ void loggingInitialize(const int period_msec, const int timeout_msec,
         ESP_LOGI(TAG, "Log Size %d smaller than LOG_NUM: %d", logSize, LOG_NUM);
     }
     logInitialized = TRUE;
-    logStartTime = (uint32_t) (clock() * 1000 / CLOCKS_PER_SEC);
 }
 
 void loggingStart(void){
     if(logInitialized){
         ESP_LOGI(TAG, "Start logging");
         logStarted = TRUE;
+        logStartTime = (uint32_t) (clock() * 1000 / CLOCKS_PER_SEC);
     }
 }
 
@@ -209,6 +209,13 @@ void TaskLogging(void *arg){
                 gLogTime[logIndex] = elapsed_time;
                 gLogData[logIndex] = *pLogData1;
                 logIndex++;
+
+                if(elapsed_time > logTimeout_msec){
+                    ESP_LOGI(TAG, "Timeout.");
+                    logPeriod_msec = INIT_PERIOD_MSEC;
+                    logTimeout_msec = INIT_TIMEOUT_MSEC;
+                    logStarted = FALSE;
+                }
             }else{
                 // データ容量が満杯になったので終了
                 ESP_LOGI(TAG, "Finished.");

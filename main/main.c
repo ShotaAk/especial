@@ -30,9 +30,10 @@
 #include "esp_log.h"
 
 static void motorTest(void){
+    static const char *TAG="motorTest";
     const int delayTime = 500; // ms
 
-    printf("Motor Test Start\n");
+    ESP_LOGI(TAG, "Motor Test Start");
     gMotorState = MOTOR_ON;
     // 正転
     for(int duty_i=0; duty_i<=10; duty_i++){
@@ -40,7 +41,7 @@ static void motorTest(void){
         gMotorDuty[RIGHT] = duty;
         gMotorDuty[LEFT] = duty;
 
-        printf("Duty L:R -> %f:%f\n",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
+        ESP_LOGI(TAG, "Duty L:R -> %f:%f",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
         vTaskDelay(delayTime / portTICK_PERIOD_MS);
     }
 
@@ -50,7 +51,7 @@ static void motorTest(void){
         gMotorDuty[RIGHT] = duty;
         gMotorDuty[LEFT] = duty;
 
-        printf("Duty L:R -> %f:%f\n",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
+        ESP_LOGI(TAG, "Duty L:R -> %f:%f",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
         vTaskDelay(delayTime / portTICK_PERIOD_MS);
     }
 
@@ -60,12 +61,12 @@ static void motorTest(void){
         gMotorDuty[RIGHT] = duty;
         gMotorDuty[LEFT] = duty;
 
-        printf("Duty L:R -> %f:%f\n",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
+        ESP_LOGI(TAG, "Duty L:R -> %f:%f",gMotorDuty[LEFT], gMotorDuty[RIGHT]);
         vTaskDelay(delayTime / portTICK_PERIOD_MS);
     }
 
     gMotorState = MOTOR_OFF;
-    printf("Motor Test Finish\n");
+    ESP_LOGI(TAG, "Motor Test Finish");
 }
 
 static void controlTest(void){
@@ -337,25 +338,59 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
+
+    gIndicatorValue = 9;
+    // ロガーの起動
+    if(loggingIsInitialized() == FALSE){
+        loggingInitialize(1, 3000,
+                "gObsSpeed", &gObsSpeed);
+    }
+    // ロガーの初期化が終わるまで待機
+    while(loggingIsInitialized() == FALSE){
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+    gIndicatorValue = 0;
+
+    // ジャイロのバイアスリセット
+    gIndicatorValue = 6;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    // ロガーが起動するまで待機
+    loggingStart();
+    while(loggingIsStarted() == FALSE){
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+    gIndicatorValue = 0;
+
     int flagOnce = 0;
     while(1){
         if(flagOnce){
             break;
         }
+
+        // --------------------------------------------
+
         gMotorState = MOTOR_ON;
         int result = straight(0.090, 0.2, 0.5);
         ESP_LOGI(TAG, "Result is %d",result);
-        // ESP_LOGI(TAG, "Wall: %d,%d,%d", gObsIsWall[DIREC_LEFT], gObsIsWall[DIREC_FRONT], gObsIsWall[DIREC_RIGHT]);
-        // ESP_LOGI(TAG, "WallVolt: %f,%f,%f,%f",
-                // gObjVoltages[OBJ_SENS_L], gObjVoltages[OBJ_SENS_FL],
-                // gObjVoltages[OBJ_SENS_FR], gObjVoltages[OBJ_SENS_R]);
-
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        // --------------------------------------------
         flagOnce = 1;
         // 制御終了状態
         gMotorState = MOTOR_OFF;
         gMotorDuty[RIGHT] = 0;
         gMotorDuty[LEFT] = 0;
+        loggingStop();
+
+        // ログの保存
+        gIndicatorValue = 9;
+        loggingSave();
+        gIndicatorValue = 0;
     }
 }
 
@@ -382,6 +417,11 @@ static void TaskMain(void *arg){
                 case MODE3_DEBUG:
                     ESP_LOGI(TAG, "DEBUG");
                     Debug();
+                    break;
+                case MODE4_DUMMY:
+                    ESP_LOGI(TAG, "LOG PRINT");
+                    loggingLoadPrint();
+                    vTaskDelay(2000 / portTICK_PERIOD_MS);
                     break;
                 default:
                     ESP_LOGI(TAG, "ELSE");
