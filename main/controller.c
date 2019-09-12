@@ -43,8 +43,8 @@ void updateController(control_t *control){
     const controlGain_t omegaGain = {0.50, 0.000000, 0.0}; // i = 0.01
 
     // フィードフォワードパラメータ
-    const float SPEED_FF_GAIN = 0;
-    const float SPEED_ACCEL_FF_GAIN = 0;
+    const float SPEED_FF_GAIN = 2.0;
+    const float SPEED_ACCEL_FF_GAIN = 0.0;
     const float OMEGA_FF_GAIN = 0;
     const float OMEGA_ACCEL_FF_GAIN = 0;
 
