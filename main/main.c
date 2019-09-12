@@ -325,7 +325,10 @@ void loggingTest(void){
         }else if(gObsTouch[RIGHT]){
             if(loggingIsInitialized() == FALSE){
                 loggingInitialize(1, 3000,
-                        "gObsAngle", &gObsAngle);
+                        "gObsAngle", &gObsAngle,
+                        "", NULL,
+                        "", NULL);
+
             }else{
                 loggingStart();
                 vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -343,7 +346,10 @@ void Debug(void){
     // ロガーの起動
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
-                "gObsSpeed", &gObsSpeed);
+                "gObsSpeed", &gObsSpeed,
+                "gMotorDutyR", &gMotorDuty[RIGHT],
+                "gMotorDutyL", &gMotorDuty[LEFT]
+                );
     }
     // ロガーの初期化が終わるまで待機
     while(loggingIsInitialized() == FALSE){

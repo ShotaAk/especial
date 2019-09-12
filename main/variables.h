@@ -8,7 +8,8 @@
 #define DIREC_NUM 4
 #define AXIS_NUM 3
 #define OBJ_SENS_NUM 4
-#define LOG_NUM 4096
+#define LOG_DATA_NUM 3
+#define LOG_INDEX_NUM 4096
 
 enum SIDE{ RIGHT=0, LEFT};
 enum DIRECTION{
@@ -95,7 +96,7 @@ extern float gObsAngle; // radians
 extern int gObsDial; // 0~9
 extern int gObsIsWall[DIREC_NUM]; // 0 or 1
 
-extern float gLogData[LOG_NUM];
-extern int gLogTime[LOG_NUM];
+extern float gLogData[LOG_DATA_NUM][LOG_INDEX_NUM];
+extern int gLogTime[LOG_INDEX_NUM];
 
 #endif

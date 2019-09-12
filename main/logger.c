@@ -22,8 +22,9 @@ static int spiffsInitialized = SPIFFS_NG;
 
 static const int INIT_PERIOD_MSEC = 1000;
 static const int INIT_TIMEOUT_MSEC = 1000;
-static char *pLogName1;
-static float *pLogData1;
+static float DUMMY_DATA = 0.0;
+static char *pLogName1, *pLogName2, *pLogName3;
+static float *pLogData1, *pLogData2, *pLogData3;
 static int logPeriod_msec;
 static int logTimeout_msec;
 static int logInitialized;
@@ -71,20 +72,48 @@ void SPIFFSinit(void){
 
 
 void loggingInitialize(const int period_msec, const int timeout_msec,
-        char *name1, float *data1){
+        char *name1, float *data1,
+        char *name2, float *data2,
+        char *name3, float *data3){
     ESP_LOGI(TAG, "Initialize: Period %d msec, Timeout %d msec", period_msec, timeout_msec); 
-    ESP_LOGI(TAG, "Initialize: Log data is %s, current value is %f", name1, *data1); 
     logPeriod_msec = period_msec;
     logTimeout_msec = timeout_msec;
-    pLogName1 = name1;
-    pLogData1 = data1;
+
+    // TODO:ここを簡潔に書く
+    if(data1){
+        ESP_LOGI(TAG, "Initialize: Log data1 is %s, current value is %f", name1, *data1); 
+        pLogName1 = name1;
+        pLogData1 = data1;
+    }else{
+        ESP_LOGI(TAG, "Initialize: No log data1."); 
+        pLogName1 = "DUMNY_DATA";
+        pLogData1 = &DUMMY_DATA;
+    }
+    if(data2){
+        ESP_LOGI(TAG, "Initialize: Log data2 is %s, current value is %f", name2, *data2); 
+        pLogName2 = name2;
+        pLogData2 = data2;
+    }else{
+        ESP_LOGI(TAG, "Initialize: No log data2."); 
+        pLogName2 = "DUMNY_DATA";
+        pLogData2 = &DUMMY_DATA;
+    }
+    if(data3){
+        ESP_LOGI(TAG, "Initialize: Log data3 is %s, current value is %f", name3, *data3); 
+        pLogName3 = name3;
+        pLogData3 = data3;
+    }else{
+        ESP_LOGI(TAG, "Initialize: No log data3."); 
+        pLogName3 = "DUMNY_DATA";
+        pLogData3 = &DUMMY_DATA;
+    }
     logIndex = 0;
 
     int logSize = timeout_msec / period_msec;
-    if(logSize > LOG_NUM){
-        ESP_LOGW(TAG, "Log Size %d grater than LOG_NUM: %d", logSize, LOG_NUM);
+    if(logSize > LOG_INDEX_NUM){
+        ESP_LOGW(TAG, "Log Size %d grater than LOG_INDEX_NUM: %d", logSize, LOG_INDEX_NUM);
     }else{
-        ESP_LOGI(TAG, "Log Size %d smaller than LOG_NUM: %d", logSize, LOG_NUM);
+        ESP_LOGI(TAG, "Log Size %d smaller than LOG_INDEX_NUM: %d", logSize, LOG_INDEX_NUM);
     }
     logInitialized = TRUE;
 }
@@ -120,9 +149,13 @@ int loggingIsStarted(void){
 }
 
 void loggingPrint(void){
-    printf("Index,TimeElapsed,%s\n", pLogName1);
+    printf("Index,TimeElapsed,%s,%s,%s\n", pLogName1,pLogName2,pLogName3);
     for(int log_i=0; log_i<logIndex; log_i++){
-        printf("%d,%d,%f\n",log_i, gLogTime[log_i], gLogData[log_i]);
+        printf("%d,%d,%f,%f,%f\n",log_i, gLogTime[log_i], 
+                gLogData[0][log_i],
+                gLogData[1][log_i],
+                gLogData[2][log_i]
+                );
     }
 }
 
@@ -141,9 +174,13 @@ void loggingSave(void){
         return;
     }
 
-    fprintf(f, "Index,TimeElapsed,%s\n", pLogName1);
+    fprintf(f, "Index,TimeElapsed,%s,%s,%s\n", pLogName1,pLogName2,pLogName3);
     for(int log_i=0; log_i<logIndex; log_i++){
-        fprintf(f, "%d,%d,%f\n", log_i,gLogTime[log_i],gLogData[log_i]);
+        fprintf(f, "%d,%d,%f,%f,%f\n", log_i,gLogTime[log_i],
+                gLogData[0][log_i],
+                gLogData[1][log_i],
+                gLogData[2][log_i]
+                );
     }
     fclose(f);
 
@@ -166,18 +203,23 @@ void loggingLoadPrint(void){
         return;
     }
 
-    char stringBuf[3][20];
+    char stringBuf[5][20];
 
     // １行目は文字列
-    fscanf(f, "%[^,],%[^,],%s", stringBuf[0], stringBuf[1], stringBuf[2]);
-    printf("%s,%s,%s\n",stringBuf[0], stringBuf[1], stringBuf[2]);
+    // Ref:https://qiita.com/oh-thevenin/items/6cbdd5081a4b31e41127
+    fscanf(f, "%[^,],%[^,],%[^,],%[^,],%s", stringBuf[0], stringBuf[1], 
+            stringBuf[2], stringBuf[3], stringBuf[4]);
+    printf("%s,%s,%s,%s,%s\n",stringBuf[0], stringBuf[1], 
+            stringBuf[2], stringBuf[3], stringBuf[4]);
 
 
     int ret;
     int index, timeElapsed;
-    float data;
-    while( (ret=fscanf(f, "%d,%d,%f", &index, &timeElapsed, &data)) != EOF){
-        printf("%d,%d,%f\n",index,timeElapsed,data);
+    float data[LOG_DATA_NUM];
+    while( (ret=fscanf(f, "%d,%d,%f,%f,%f", &index, &timeElapsed, 
+                    &data[0], &data[1], &data[2])) != EOF){
+        printf("%d,%d,%f,%f,%f\n",index,timeElapsed,
+                data[0], data[1], data[2]);
     }
     fclose(f);
 
@@ -202,12 +244,16 @@ void TaskLogging(void *arg){
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(logStarted){
-            if(logIndex < LOG_NUM){
+            if(logIndex < LOG_INDEX_NUM){
                 // 時間取得
                 elapsed_time = (uint32_t) (clock() * 1000 / CLOCKS_PER_SEC) - logStartTime;
-                ESP_LOGD(TAG, "Logging: %d, %s, %f", elapsed_time, pLogName1, *pLogData1);
+                ESP_LOGD(TAG, "Logging1: %d, %s, %f", elapsed_time, pLogName1, *pLogData1);
+                ESP_LOGD(TAG, "Logging2: %d, %s, %f", elapsed_time, pLogName2, *pLogData2);
+                ESP_LOGD(TAG, "Logging3: %d, %s, %f", elapsed_time, pLogName3, *pLogData3);
                 gLogTime[logIndex] = elapsed_time;
-                gLogData[logIndex] = *pLogData1;
+                gLogData[0][logIndex] = *pLogData1;
+                gLogData[1][logIndex] = *pLogData2;
+                gLogData[2][logIndex] = *pLogData3;
                 logIndex++;
 
                 if(elapsed_time > logTimeout_msec){
