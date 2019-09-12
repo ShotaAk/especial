@@ -42,6 +42,15 @@ void updateController(control_t *control){
     const controlGain_t speedGain = {12.0, 0.0, 0.0}; // i= 0.1
     const controlGain_t omegaGain = {0.00, 0.000000, 0.0}; // i = 0.01
 
+    // フィードフォワードパラメータ
+    const float SPEED_FF_GAIN = 0;
+    const float SPEED_ACCEL_FF_GAIN = 0;
+    const float OMEGA_FF_GAIN = 0;
+    const float OMEGA_ACCEL_FF_GAIN = 0;
+
+    static float prevTargetSpeed = 0;
+    static float prevTargetOmega = 0;
+
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
         // 強制的に目標速度を設定する
@@ -88,7 +97,7 @@ void updateController(control_t *control){
     // 目標速度をタイヤの速度に変換する
     float MotorVoltage[SIDE_NUM] = {0};
 
-    // フィードバック制御
+    /* -------------------フィードバック項の計算------------------------------*/
     float speedError = TargetSpeed - gObsSpeed;
     float omegaError = TargetOmega - gGyro[AXIS_Z];
 
@@ -104,15 +113,29 @@ void updateController(control_t *control){
     if(fabs(sumOmegaError) >= ERROR_MAX){
         sumOmegaError = copysign(ERROR_MAX, sumOmegaError);
     }
+    /* -----------------------------------------------------------------------*/
 
-    MotorVoltage[RIGHT] += (speedError * speedGain.Kp + sumSpeedError * speedGain.Ki);
-    MotorVoltage[LEFT]  += (speedError * speedGain.Kp + sumSpeedError * speedGain.Ki);
+    // 直進速度のフィードフォワード
+    float voltageSpeedFF = TargetSpeed * SPEED_FF_GAIN 
+        + (TargetSpeed - prevTargetSpeed) * SPEED_ACCEL_FF_GAIN;
+    MotorVoltage[RIGHT] += voltageSpeedFF;
+    MotorVoltage[LEFT]  += voltageSpeedFF;
+    // 角速度のフィードフォワード
+    float voltageOmegaFF = TargetOmega * OMEGA_FF_GAIN 
+        + (TargetOmega - prevTargetOmega) * OMEGA_ACCEL_FF_GAIN;;
+    MotorVoltage[RIGHT] -= voltageOmegaFF;
+    MotorVoltage[LEFT]  += voltageOmegaFF;
 
-    // 角速度値を入力
-    MotorVoltage[RIGHT] -= (omegaError * omegaGain.Kp + sumOmegaError * omegaGain.Ki);
-    MotorVoltage[LEFT]  += (omegaError * omegaGain.Kp + sumOmegaError * omegaGain.Ki);
-    
-    // printf("MotorVoltage, Error: %f, %f, %f\n", MotorVoltage[LEFT], MotorVoltage[RIGHT], omegaError);
+    // 直進速度のフィードバック
+    float voltageSpeedFB = speedError * speedGain.Kp
+        + sumSpeedError * speedGain.Ki;
+    MotorVoltage[RIGHT] += voltageSpeedFB;
+    MotorVoltage[LEFT]  += voltageSpeedFB;
+    // 角速度のフィードバック
+    float voltageOmegaFB = omegaError * omegaGain.Kp
+        + sumOmegaError * omegaGain.Ki;
+    MotorVoltage[RIGHT] -= voltageOmegaFB;
+    MotorVoltage[LEFT]  += voltageOmegaFB;
 
     // 印加電圧リミット
     const float voltageLimit = 3.0; // voltage
@@ -130,6 +153,9 @@ void updateController(control_t *control){
 
     // 目標速度を保存（デバッグ用）
     gTargetSpeed = TargetSpeed;
+    // 目標速度を保存（フィードフォワード用）
+    prevTargetSpeed = TargetSpeed;
+    prevTargetSpeed = TargetOmega;
 }
 
 int straight(const float targetDistance, const float endSpeed, const float timeout){
