@@ -87,6 +87,7 @@ extern int gIsWall[DIREC_NUM];
 extern float gMovingDistance; // meters
 
 extern enum CONTROL_REQUEST gControlRequest;
+extern float gTargetSpeed; // m/s
 
 extern int gObsBatteryIsLow; // 0 or 1
 extern int gObsTouch[SIDE_NUM]; // 0 or 1

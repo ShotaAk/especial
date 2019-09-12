@@ -40,7 +40,7 @@ typedef struct{
 
 void updateController(control_t *control){
     const controlGain_t speedGain = {12.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {1.00, 0.000001, 0.0}; // i = 0.01
+    const controlGain_t omegaGain = {0.00, 0.000000, 0.0}; // i = 0.01
 
     // 直進方向の速度更新
     if(control->forceSpeedEnable){
@@ -127,15 +127,19 @@ void updateController(control_t *control){
     // バッテリー電圧を元にデューティを計算
     gMotorDuty[RIGHT] = 100.0 * MotorVoltage[RIGHT] / gBatteryVoltage;
     gMotorDuty[LEFT] = 100.0 * MotorVoltage[LEFT] / gBatteryVoltage;
+
+    // 目標速度を保存（デバッグ用）
+    gTargetSpeed = TargetSpeed;
 }
 
 int straight(const float targetDistance, const float endSpeed, const float timeout){
     // 到達地点で速度がendSpeedになる直線走行
+    // 台形制御
     const float MAX_SPEED = 0.5; // m/s
+    const float MIN_SPEED = 0.2; // m/s
     const float ACCEL = 1.0; // m/s^2
     const float DECEL = -1.0; // m/s^2
 
-    float remainingDistance = 0; // 残距離
     control_t control;
     control.maxSpeed = MAX_SPEED;
     control.maxOmega = 0;
@@ -146,8 +150,12 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
 
-    if(targetDistance < 0){
-        control.invertSpeed = 1;
+    // TODO:逆走機能を設ける
+    if(targetDistance < 0 || endSpeed < 0 || timeout < 0){
+        // control.invertSpeed = 1;
+        ESP_LOGE(TAG, "Invalid arguments, targetDistance:%f, endSpeed:%f, timeout:%f", 
+                targetDistance, endSpeed, timeout);
+        return FALSE;
     }
 
     // 移動距離を初期化
@@ -159,39 +167,88 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     // 加速・定速
     control.accelSpeed = ACCEL;
     while(1){
-        remainingDistance = fabs(targetDistance - gObsMovingDistance) - 0.010;
+        // 目標位置までの残り移動距離
+        // TODO:逆走機能を設ける
+        float remainingDistance = targetDistance - gObsMovingDistance;
+        if(remainingDistance < 0){
+            ESP_LOGE(TAG, "targetDistance < gObsMovingDistance");
+            return FALSE;
+        }
+        // 目標最終速度までの残り速度
+        float remainingSpeed = TargetSpeed - endSpeed;
+        // 減速に必要な距離
+        float brakingDistance = 
+            remainingSpeed //高さ
+            * (remainingSpeed / control.accelSpeed) // 底辺
+            * 0.5; // 三角形の面積
 
-        // 残距離が減速距離より短かったら加速をやめる
-        if(remainingDistance <= 
-                (TargetSpeed*TargetSpeed - endSpeed*endSpeed) / (2.0*control.accelSpeed)){
+        // 残距離が減速距離より短かったら加速ループを抜ける
+        if(remainingDistance <= brakingDistance){
             break;
         }
 
+        // 制御器の更新
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
 
         // タイムアウトチェック
         if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
-            ESP_LOGI(TAG, "Timeout at accelereation");
+            ESP_LOGE(TAG, "Timeout at accelereation");
             return FALSE;
         }
     }
 
     // 減速
+    // TODO:逆走機能を設ける
+    float stopDistance = 0.0;
+    int stopControlEnable = FALSE;
+    if(endSpeed < MIN_SPEED){
+        // 終端速度が最低駆動トルクの速度より小さい場合は、停止用の距離を設ける
+        stopDistance = 0.001;
+        stopControlEnable = TRUE;
+    }
     control.accelSpeed = DECEL;
-    while(fabs(gObsMovingDistance) < fabs(targetDistance)){
-        // 目標速度が終端速度よりも小さくなったら、加速度(減速度)を0にする
-        if(fabs(TargetSpeed) <= fabs(endSpeed)){
+    while(gObsMovingDistance < (targetDistance - stopDistance)){
+        // 制御速度が終端速度よりも小さくなったら、加速度(減速度)を0にする
+        if(TargetSpeed <= endSpeed){
             control.accelSpeed = 0;
         }
+        // 制御速度が最低駆動トルクの速度より小さくなったら、目標速度を固定する
+        if(TargetSpeed < MIN_SPEED){
+            control.forceSpeedEnable = 1;
+            control.forceSpeed = MIN_SPEED;
+        }
 
+        // 制御器の更新
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
 
         // タイムアウトチェック
         if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
-            ESP_LOGI(TAG, "Timeout at deceleration");
+            ESP_LOGE(TAG, "Timeout at deceleration");
             return FALSE;
+        }
+    }
+
+    // 停止
+    // TODO:逆走機能を設ける
+    const float SPEED_MARGIN = 0.01; // m/s ピッタリ速度を合わせるのは難しいので
+    if(stopControlEnable){
+        // 終端速度に達するまで制御を続ける
+        while(fabs(gObsSpeed - endSpeed) >= SPEED_MARGIN){
+            // 強制的に速度を0 m/sにする
+            control.forceSpeedEnable = 1;
+            control.forceSpeed = 0;
+
+            // 制御器の更新
+            updateController(&control);
+            vTaskDelay(1 / portTICK_PERIOD_MS);
+
+            // タイムアウトチェック
+            if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+                ESP_LOGE(TAG, "Timeout at stop");
+                return FALSE;
+            }
         }
     }
 

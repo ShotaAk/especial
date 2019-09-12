@@ -24,6 +24,7 @@ int gIsWall[DIREC_NUM] = {0};
 float gMovingDistance = 0;
 
 enum CONTROL_REQUEST gControlRequest = CONT_FINISH;
+float gTargetSpeed = 0; // m/s
 
 int gObsBatteryIsLow = FALSE;
 int gObsTouch[SIDE_NUM] = {FALSE};

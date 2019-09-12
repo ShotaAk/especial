@@ -346,9 +346,9 @@ void Debug(void){
     // ロガーの起動
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
-                "gObsSpeed", &gObsSpeed,
-                "gMotorDutyR", &gMotorDuty[RIGHT],
-                "gMotorDutyL", &gMotorDuty[LEFT]
+                "gObsMovingDistance", &gObsMovingDistance,
+                "gTargetSpeed", &gTargetSpeed,
+                "gObsSpeed", &gObsSpeed
                 );
     }
     // ロガーの初期化が終わるまで待機
@@ -372,32 +372,36 @@ void Debug(void){
     }
     gIndicatorValue = 0;
 
-    int flagOnce = 0;
-    while(1){
-        if(flagOnce){
-            break;
-        }
+    int result = TRUE;
 
-        // --------------------------------------------
+    // --------------------------------------------
 
-        gMotorState = MOTOR_ON;
-        int result = straight(0.090, 0.2, 0.5);
-        ESP_LOGI(TAG, "Result is %d",result);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-        // --------------------------------------------
-        flagOnce = 1;
-        // 制御終了状態
-        gMotorState = MOTOR_OFF;
-        gMotorDuty[RIGHT] = 0;
-        gMotorDuty[LEFT] = 0;
-        loggingStop();
+    gMotorState = MOTOR_ON;
+    result = straight(0.090, 0.0, 2.0);
+    ESP_LOGI(TAG, "Result is %d",result);
 
-        // ログの保存
-        gIndicatorValue = 9;
-        loggingSave();
-        gIndicatorValue = 0;
+
+    // --------------------------------------------
+    // 制御終了状態
+    gMotorState = MOTOR_OFF;
+    gMotorDuty[RIGHT] = 0;
+    gMotorDuty[LEFT] = 0;
+    loggingStop();
+
+    // 結果の表示
+    if(result){
+        gIndicatorValue = 3;
+    }else{
+        gIndicatorValue = 6;
     }
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    // ログの保存
+    gIndicatorValue = 9;
+    loggingSave();
+    loggingReset();
+    gIndicatorValue = 0;
 }
 
 static void TaskMain(void *arg){
