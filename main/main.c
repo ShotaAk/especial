@@ -402,6 +402,9 @@ void Debug(void){
     loggingSave();
     loggingReset();
     gIndicatorValue = 0;
+
+    // ダイアルを初期化
+    gObsDial = 0;
 }
 
 static void TaskMain(void *arg){
@@ -459,6 +462,7 @@ void app_main()
     if(gObsBatteryIsLow){
         ESP_LOGE(TAG, "Low battery voltage at startup. %f volts", gBatteryVoltage);
     }else{
+        ESP_LOGI(TAG, "Battery voltage is %f volts", gBatteryVoltage);
         ESP_LOGI(TAG, "Start Especial Main Program");
         xTaskCreate(TaskObjectSensing, "TaskObjectSensing", 4096, NULL, 5, NULL);
 
@@ -479,6 +483,9 @@ void app_main()
 
             vTaskDelay(500 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
+
+            // ダイアルを初期化
+            gObsDial = 0;
         }
     }
 
