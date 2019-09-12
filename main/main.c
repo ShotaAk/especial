@@ -348,7 +348,7 @@ void Debug(void){
         loggingInitialize(1, 3000,
                 "gObsMovingDistance", &gObsMovingDistance,
                 "gTargetSpeed", &gTargetSpeed,
-                "gObsSpeed", &gObsSpeed
+                "gGyroZ", &gGyro[AXIS_Z]
                 );
     }
     // ロガーの初期化が終わるまで待機

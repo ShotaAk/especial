@@ -39,8 +39,8 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {12.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {0.00, 0.000000, 0.0}; // i = 0.01
+    const controlGain_t speedGain = {6.0, 0.0, 0.0}; // i= 0.1
+    const controlGain_t omegaGain = {0.50, 0.000000, 0.0}; // i = 0.01
 
     // フィードフォワードパラメータ
     const float SPEED_FF_GAIN = 0;
