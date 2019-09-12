@@ -25,6 +25,7 @@ float gMovingDistance = 0;
 
 enum CONTROL_REQUEST gControlRequest = CONT_FINISH;
 float gTargetSpeed = 0; // m/s
+float gTargetOmega = 0; // rad/s
 
 int gObsBatteryIsLow = FALSE;
 int gObsTouch[SIDE_NUM] = {FALSE};

@@ -346,8 +346,12 @@ void Debug(void){
     // ロガーの起動
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
-                "gObsMovingDistance", &gObsMovingDistance,
-                "gTargetSpeed", &gTargetSpeed,
+                // "gObsMovingDistance", &gObsMovingDistance,
+                // "gTargetSpeed", &gTargetSpeed,
+                // "gObsSpeed", &gObsSpeed
+
+                "gObsAngle", &gObsAngle,
+                "gTargetOmega", &gTargetOmega,
                 "gGyroZ", &gGyro[AXIS_Z]
                 );
     }
@@ -378,7 +382,26 @@ void Debug(void){
 
 
     gMotorState = MOTOR_ON;
-    result = straight(0.090, 0.0, 2.0);
+    result = straight(0.045, 0.2, 2.0);
+    result = straight(0.090, 0.2, 2.0);
+    result = straight(0.090, 0.2, 2.0);
+
+    result = straight(0.045, 0.0, 2.0);
+    result = turn(-M_PI_2, 2.0);
+    result = straight(0.045, 0.0, 2.0);
+
+    result = straight(0.045, 0.0, 2.0);
+    result = turn(-M_PI_2, 2.0);
+    result = straight(0.045, 0.0, 2.0);
+
+    result = straight(0.045, 0.2, 2.0);
+    result = straight(0.090, 0.2, 2.0);
+    result = straight(0.090, 0.2, 2.0);
+    result = straight(0.045, 0.0, 2.0);
+
+    // result = straight(0.090, 0.2, 2.0);
+    // result = straight(0.090, 0.2, 2.0);
+    // result = straight(0.090, 0.0, 2.0);
     ESP_LOGI(TAG, "Result is %d",result);
 
 

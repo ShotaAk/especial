@@ -45,7 +45,7 @@ void updateController(control_t *control){
     // フィードフォワードパラメータ
     const float SPEED_FF_GAIN = 2.0;
     const float SPEED_ACCEL_FF_GAIN = 0.0;
-    const float OMEGA_FF_GAIN = 0;
+    const float OMEGA_FF_GAIN = 0.1;
     const float OMEGA_ACCEL_FF_GAIN = 0;
 
     static float prevTargetSpeed = 0;
@@ -153,6 +153,7 @@ void updateController(control_t *control){
 
     // 目標速度を保存（デバッグ用）
     gTargetSpeed = TargetSpeed;
+    gTargetOmega = TargetOmega;
     // 目標速度を保存（フィードフォワード用）
     prevTargetSpeed = TargetSpeed;
     prevTargetSpeed = TargetOmega;
@@ -364,7 +365,9 @@ int straightAndStop(const float targetDistance, const float timeout){
     return 1;
 }
 
-void turn(const float targetAngle){
+int turn(const float targetAngle, const float timeout){
+    // 到達角度で速度が0になる超信地旋回
+    // 台形制御
     const float MAX_OMEGA= M_PI; // rad/s
     const float MIN_OMEGA= M_PI*0.02; // rad/s
     const float ACCEL = M_PI*2; // rad/s^2
@@ -384,6 +387,9 @@ void turn(const float targetAngle){
 
     float startAngle = gObsAngle; // 制御開始前の角度取得
 
+    // 時間計測開始
+    clock_t startTime = clock();
+
     if(targetAngle < 0){
         control.invertOmega = 1;
     }
@@ -398,9 +404,14 @@ void turn(const float targetAngle){
             break;
         }
 
-        // printf("remainingAngle : %f\n", remainingAngle);
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at accelereation");
+            return FALSE;
+        }
     }
 
     // 減速
@@ -412,9 +423,14 @@ void turn(const float targetAngle){
             control.forceOmegaEnable = 1;
         }
 
-        // printf("moveAngle %f\n", gObsAngle - startAngle);
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at deceleration");
+            return FALSE;
+        }
     }
 
     // 速度が0以下になるまで制御を続ける
@@ -424,8 +440,15 @@ void turn(const float targetAngle){
 
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at stop");
+            return FALSE;
+        }
     }
-    // printf("finish\n");
+
+    return TRUE;
 }
 
 void stop(const int times){
@@ -496,21 +519,21 @@ void TaskControlMotion(void *arg){
 
         case CONT_TURN_LEFT:
             gMotorState = MOTOR_ON;
-            turn(M_PI_2);
+            turn(M_PI_2, 0.5);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_TURN_RIGHT:
             gMotorState = MOTOR_ON;
-            turn(-M_PI_2);
+            turn(-M_PI_2, 0.5);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
 
         case CONT_TURN_BACK:
             gMotorState = MOTOR_ON;
-            turn(M_PI);
+            turn(M_PI, 0.5);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             stop(waitTime);
             break;
