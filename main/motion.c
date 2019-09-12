@@ -202,6 +202,9 @@ void TaskReadMotion(void *arg){
     // ジャイロののドリフト解消
     updateBias(spi, 1000);
 
+    float prevGyro[AXIS_NUM];
+    float currentGyro[AXIS_NUM];
+
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gGyroBiasResetRequest){
@@ -214,9 +217,15 @@ void TaskReadMotion(void *arg){
         gAccel[AXIS_Y] = get_accel(spi, AXIS_Y);
         gAccel[AXIS_Z] = get_accel(spi, AXIS_Z);
 
-        gGyro[AXIS_X] = to_radians(get_gyro(spi, AXIS_X)) - biasGyro[AXIS_X];
-        gGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y)) - biasGyro[AXIS_Y];
-        gGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z)) - biasGyro[AXIS_Z];
+        currentGyro[AXIS_X] = to_radians(get_gyro(spi, AXIS_X)) - biasGyro[AXIS_X];
+        currentGyro[AXIS_Y] = to_radians(get_gyro(spi, AXIS_Y)) - biasGyro[AXIS_Y];
+        currentGyro[AXIS_Z] = to_radians(get_gyro(spi, AXIS_Z)) - biasGyro[AXIS_Z];
+
+        // ローパスフィルタをかける
+        for(int axis_i=0; axis_i<AXIS_NUM; axis_i++){
+            gGyro[axis_i] = currentGyro[axis_i] * 0.9 + prevGyro[axis_i] * 0.1;
+            prevGyro[axis_i] = gGyro[axis_i];
+        }
 
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
