@@ -260,7 +260,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
 
     // 停止
     // TODO:逆走機能を設ける
-    const float SPEED_MARGIN = 0.01; // m/s ピッタリ速度を合わせるのは難しいので
+    const float SPEED_MARGIN = 0.01; // 0 m/s ピッタリ速度を合わせるのは難しいので
     if(stopControlEnable){
         // 終端速度に達するまで制御を続ける
         while(fabs(gObsSpeed - endSpeed) >= SPEED_MARGIN){
@@ -370,11 +370,11 @@ int turn(const float targetAngle, const float timeout){
     // 到達角度で速度が0になる超信地旋回
     // 台形制御
     const float MAX_OMEGA= M_PI; // rad/s
-    const float MIN_OMEGA= M_PI*0.02; // rad/s
-    const float ACCEL = M_PI*2; // rad/s^2
-    const float DECEL = -M_PI; // rad/s^2
+    const float MIN_OMEGA= M_PI*0.3; // rad/s
+    const float ACCEL = M_PI*2.5; // rad/s^2
+    const float DECEL = -M_PI*2.5; // rad/s^2
 
-    float remainingAngle = 0; // 残角度
+    const float END_OMEGA = 0; // 終端角速度を0 rad/s固定にする
 
     control_t control;
     control.maxSpeed = 0;
@@ -398,13 +398,24 @@ int turn(const float targetAngle, const float timeout){
     // 加速・定速
     control.accelOmega = ACCEL;
     while(1){
-        remainingAngle = fabs(targetAngle - (gObsAngle - startAngle));
+        // 目標角度までの残り回転角度
+        float remainingAngle = fabs(targetAngle - (gObsAngle - startAngle));
 
-        // 残角度が停止角度より短かったら加速をやめる
-        if(remainingAngle <= TargetOmega*TargetOmega / (2.0*control.accelOmega)){
+        // 目標最終角速度(0 rad/s)までの残り速度
+        float remainingOmega = TargetOmega - END_OMEGA;
+        // 減速にかかる時間
+        float brakingTime = remainingOmega / fabs(DECEL); // 減速度の大きさだけ取る
+        // 減速に必要な回転角度
+        float brakingAngle = 
+            remainingOmega * brakingTime * 0.5 // 三角系の面積
+            + END_OMEGA * brakingTime; // 四角形の面積
+
+        // 残角度が停止角度より短かったら加速ループを抜ける
+        if(remainingAngle <= brakingAngle){
             break;
         }
 
+        // 制御器の更新
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
 
@@ -417,13 +428,15 @@ int turn(const float targetAngle, const float timeout){
 
     // 減速
     control.accelOmega = DECEL;
-    while(fabs((gObsAngle - startAngle)) < fabs(targetAngle) - M_PI*0.01){
+    const float STOP_ANGLE = M_PI*0.01; // 停止用の角度
+    while(fabs((gObsAngle - startAngle)) < fabs(targetAngle) - STOP_ANGLE){
         // 一定速度まで減速したら、最低駆動トルクで走行
         if(fabs(TargetOmega) <= MIN_OMEGA){
             control.forceOmega = MIN_OMEGA;
             control.forceOmegaEnable = 1;
         }
 
+        // 制御器の更新
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
 
@@ -435,10 +448,12 @@ int turn(const float targetAngle, const float timeout){
     }
 
     // 速度が0以下になるまで制御を続ける
-    while(fabs(gGyro[AXIS_Z]) >= 0.01){
+    const float OMEGA_MARGIN = 0.01; // 0 rad/s ピッタリ速度を合わせるのは難しいので
+    while(fabs(gGyro[AXIS_Z]) >= OMEGA_MARGIN){
         control.forceOmega = 0;
         control.forceOmegaEnable = 1;
 
+        // 制御器の更新
         updateController(&control);
         vTaskDelay(1 / portTICK_PERIOD_MS);
 
