@@ -203,11 +203,12 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
         }
         // 目標最終速度までの残り速度
         float remainingSpeed = TargetSpeed - endSpeed;
+        // 減速にかかる時間
+        float brakingTime = remainingSpeed / fabs(DECEL); // 減速度の大きさだけ取る
         // 減速に必要な距離
         float brakingDistance = 
-            remainingSpeed //高さ
-            * (remainingSpeed / control.accelSpeed) // 底辺
-            * 0.5; // 三角形の面積
+            remainingSpeed * brakingTime * 0.5 // 三角形の面積
+            + endSpeed * brakingTime; // 四角形の面積
 
         // 残距離が減速距離より短かったら加速ループを抜ける
         if(remainingDistance <= brakingDistance){
