@@ -135,69 +135,77 @@ void requestAndWait(const enum CONTROL_REQUEST request){
 }
 
 void searchLefthand(void){
-    printf("search left hand\n");
+    const float TIME_OUT = 2.0; // sec
+    const float MAX_SPEED = 0.3; // m/s
+    const float ACCEL = 1.0; // m/ss
+    const float HALF_DISTANCE = 0.045;
+    const float DISTANCE = 0.090;
+    int result = TRUE;
+
+    gIndicatorValue = 6;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    gIndicatorValue = 9;
 
     // ジャイロのバイアスリセット
     gGyroBiasResetRequest = 1;
     while(gGyroBiasResetRequest){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
+    gIndicatorValue = 0;
 
-    // ここからモータに電源が入る
-    gControlRequest = CONT_NONE; // 待機状態
-
+    gMotorState = MOTOR_ON;
     //半区画進む
-    requestAndWait(CONT_HALF_FORWARD);
+    result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
     int doHipAdjust = 0; // けつあて補正
     while(1){
         // 左手法なので、条件文の順番が重要である
         // 順番を変更してはいけない
-        if(gIsWall[DIREC_LEFT] != 1){
-            printf("TURN LEFT\n");
+        if(gObsIsWall[DIREC_LEFT] != 1){
             // 左に壁がなければ左に進む
-            if(gIsWall[DIREC_RIGHT] == 1){
+            if(gObsIsWall[DIREC_RIGHT] == 1){
                 // 右に壁があればけつあて
                 doHipAdjust = 1;
             }
-            requestAndWait(CONT_HALF_FORWARD);
-            requestAndWait(CONT_TURN_LEFT);
-            if(doHipAdjust){
-                // けつあて
-                requestAndWait(CONT_KETSUATE);
-                doHipAdjust = 0;
-            }
-            requestAndWait(CONT_HALF_FORWARD);
-        }else if(gIsWall[DIREC_FRONT] != 1){
-            printf("FORWARD\n");
-            // 前に壁がなければ前に進む
-            requestAndWait(CONT_FORWARD);
 
-        }else if(gIsWall[DIREC_RIGHT] != 1){
-            printf("TURN RIGHT\n");
+            gIndicatorValue = 2;
+            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+            result = turn(M_PI_2, TIME_OUT);
+            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+            // if(doHipAdjust){
+            //     // けつあて
+            //     requestAndWait(CONT_KETSUATE);
+            //     doHipAdjust = 0;
+            // }
+        }else if(gObsIsWall[DIREC_FRONT] != 1){
+            // 前に壁がなければ前に進む
+            gIndicatorValue = 3;
+            result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+        }else if(gObsIsWall[DIREC_RIGHT] != 1){
             // 右に壁がなければ右に進む
-            if(gIsWall[DIREC_LEFT] == 1){
+            if(gObsIsWall[DIREC_LEFT] == 1){
                 // 左に壁があればけつあて
                 doHipAdjust = 1;
             }
-            requestAndWait(CONT_HALF_FORWARD);
-            requestAndWait(CONT_TURN_RIGHT);
-            if(doHipAdjust){
-                // けつあて
-                requestAndWait(CONT_KETSUATE);
-                doHipAdjust = 0;
-            }
-            requestAndWait(CONT_HALF_FORWARD);
+            gIndicatorValue = 1;
+            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+            result = turn(-M_PI_2, TIME_OUT);
+            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+            // if(doHipAdjust){
+            //     // けつあて
+            //     requestAndWait(CONT_KETSUATE);
+            //     doHipAdjust = 0;
+            // }
 
         }else{
-            printf("TURN BACK\n");
             // それ以外の場合は後ろに進む
-            requestAndWait(CONT_HALF_FORWARD);
-            requestAndWait(CONT_TURN_BACK);
-            // けつあて
-            requestAndWait(CONT_KETSUATE);
-            requestAndWait(CONT_HALF_FORWARD);
-
+            gIndicatorValue = 6;
+            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+            result = turn(M_PI, TIME_OUT);
+            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
         }
     }
 
@@ -367,8 +375,8 @@ void Debug(void){
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
                 "gObsMovingDistance", &gObsMovingDistance,
-                // "gTargetSpeed", &gTargetSpeed,
-                // "gObsSpeed", &gObsSpeed
+                "gTargetSpeed", &gTargetSpeed,
+                "gObsSpeed", &gObsSpeed
 
                 // "gObsAngle", &gObsAngle,
                 // "gTargetOmega", &gTargetOmega,
@@ -376,8 +384,8 @@ void Debug(void){
 
                 // "gObjVoltagesR", &gObjVoltages[OBJ_SENS_R],
                 // "gObjVoltagesL", &gObjVoltages[OBJ_SENS_L]
-                "gObsIsWallR", &gObsIsWall[DIREC_RIGHT],
-                "gObsIsWallL", &gObsIsWall[DIREC_LEFT]
+                // "gObsIsWallR", &gObsIsWall[DIREC_RIGHT],
+                // "gObsIsWallL", &gObsIsWall[DIREC_LEFT]
                 );
     }
     // ロガーの初期化が終わるまで待機
@@ -410,12 +418,17 @@ void Debug(void){
     const float ACCEL = 1.0; // m/ss
 
     gMotorState = MOTOR_ON;
-    float endSpeed = 0.3;
 
-    result = straight(0.045, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
-    result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
-    result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
-    result = straight(0.090, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.045, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // result = turn(-M_PI_2, TIME_OUT);
+
+    // KETSUATE
+    // result = straight(-0.020, 0.0, 0.5, MAX_SPEED, ACCEL);
+    // result = straight(0.010, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
+
+    // result = straight(0.045, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
+    // result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
     ESP_LOGI(TAG, "Result is %d",result);
 
@@ -458,6 +471,7 @@ static void TaskMain(void *arg){
                 switch(mode){
                 case MODE0_SEARCH:
                     ESP_LOGI(TAG, "SEARCH");
+                    searchLefthand();
                     break;
                 case MODE1_FAST_RUN:
                     ESP_LOGI(TAG, "FAST_RUN");
