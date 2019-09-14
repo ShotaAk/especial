@@ -39,11 +39,11 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {6.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {0.50, 0.000000, 0.0}; // i = 0.01
+    const controlGain_t speedGain = {4.0, 0.0, 0.0}; // i= 0.1
+    const controlGain_t omegaGain = {0.50, 0.000000, 0.0}; // p = 0.5
 
     // フィードフォワードパラメータ
-    const float SPEED_FF_GAIN = 2.0;
+    const float SPEED_FF_GAIN = 1.5;
     const float SPEED_ACCEL_FF_GAIN = 0.0;
     const float OMEGA_FF_GAIN = 0.1;
     const float OMEGA_ACCEL_FF_GAIN = 0;
@@ -159,13 +159,18 @@ void updateController(control_t *control){
     prevTargetSpeed = TargetOmega;
 }
 
-int straight(const float targetDistance, const float endSpeed, const float timeout){
+int straight(const float targetDistance, const float endSpeed, const float timeout,
+        const float maxSpeed, const float accel){
     // 到達地点で速度がendSpeedになる直線走行
     // 台形制御
-    const float MAX_SPEED = 0.5; // m/s
+    // const float MAX_SPEED = 0.5; // m/s
     const float MIN_SPEED = 0.2; // m/s
-    const float ACCEL = 1.0; // m/s^2
-    const float DECEL = -1.0; // m/s^2
+    // const float ACCEL = 1.0; // m/s^2
+    // const float DECEL = -1.0; // m/s^2
+
+    float MAX_SPEED = maxSpeed;
+    float ACCEL = accel;
+    float DECEL = -accel;
 
     control_t control;
     control.maxSpeed = MAX_SPEED;
@@ -232,7 +237,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     int stopControlEnable = FALSE;
     if(endSpeed < MIN_SPEED){
         // 終端速度が最低駆動トルクの速度より小さい場合は、停止用の距離を設ける
-        stopDistance = 0.001;
+        stopDistance = 0.01;
         stopControlEnable = TRUE;
     }
     control.accelSpeed = DECEL;
@@ -518,7 +523,7 @@ void TaskControlMotion(void *arg){
             // gControlRequest = CONT_NONE; // リクエスト受付開始
             // stop(waitTime);
 
-            straight(0.090, 0.2, TIME_OUT);
+            // straight(0.090, 0.2, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             break;
 
@@ -528,7 +533,7 @@ void TaskControlMotion(void *arg){
             // gControlRequest = CONT_NONE; // リクエスト受付開始
             // stop(waitTime);
             
-            straight(0.040, 0.2, TIME_OUT);
+            // straight(0.040, 0.2, TIME_OUT);
             gControlRequest = CONT_NONE; // リクエスト受付開始
             
             break;

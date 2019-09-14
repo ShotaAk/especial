@@ -346,13 +346,13 @@ void Debug(void){
     // ロガーの起動
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
-                // "gObsMovingDistance", &gObsMovingDistance,
-                // "gTargetSpeed", &gTargetSpeed,
-                // "gObsSpeed", &gObsSpeed
+                "gObsMovingDistance", &gObsMovingDistance,
+                "gTargetSpeed", &gTargetSpeed,
+                "gObsSpeed", &gObsSpeed
 
-                "gObsAngle", &gObsAngle,
-                "gTargetOmega", &gTargetOmega,
-                "gGyroZ", &gGyro[AXIS_Z]
+                // "gObsAngle", &gObsAngle,
+                // "gTargetOmega", &gTargetOmega,
+                // "gGyroZ", &gGyro[AXIS_Z]
                 );
     }
     // ロガーの初期化が終わるまで待機
@@ -380,28 +380,18 @@ void Debug(void){
 
     // --------------------------------------------
 
+    const float TIME_OUT = 2.0; // sec
+    const float MAX_SPEED = 0.3; // m/s
+    const float ACCEL = 1.0; // m/ss
 
     gMotorState = MOTOR_ON;
-    result = straight(0.045, 0.2, 2.0);
-    result = straight(0.090, 0.2, 2.0);
-    result = straight(0.090, 0.2, 2.0);
+    float endSpeed = 0.3;
 
-    result = straight(0.045, 0.0, 2.0);
-    result = turn(-M_PI_2, 2.0);
-    result = straight(0.045, 0.0, 2.0);
+    result = straight(0.045, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
-    result = straight(0.045, 0.0, 2.0);
-    result = turn(-M_PI_2, 2.0);
-    result = straight(0.045, 0.0, 2.0);
-
-    result = straight(0.045, 0.2, 2.0);
-    result = straight(0.090, 0.2, 2.0);
-    result = straight(0.090, 0.2, 2.0);
-    result = straight(0.045, 0.0, 2.0);
-
-    // result = straight(0.090, 0.2, 2.0);
-    // result = straight(0.090, 0.2, 2.0);
-    // result = straight(0.090, 0.0, 2.0);
     ESP_LOGI(TAG, "Result is %d",result);
 
 
