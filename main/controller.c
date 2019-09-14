@@ -40,7 +40,7 @@ typedef struct{
 
 void updateController(control_t *control){
     const controlGain_t speedGain = {4.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {0.50, 0.000000, 0.0}; // p = 0.5
+    const controlGain_t omegaGain = {0.80, 0.00001, 0.0}; // p = 0.5
 
     // フィードフォワードパラメータ
     const float SPEED_FF_GAIN = 1.5;
@@ -468,6 +468,53 @@ int turn(const float targetAngle, const float timeout){
             return FALSE;
         }
     }
+
+    return TRUE;
+}
+
+int straightBack(const float timeout){
+    // けつあてようの逆走行
+    const float MIN_SPEED = 0.2; // m/s
+
+    control_t control;
+    control.maxSpeed = MIN_SPEED;
+    control.maxOmega = 0;
+    control.invertSpeed = 1;
+    control.invertOmega = 0;
+    control.accelSpeed = 0;
+    control.accelOmega = 0;
+    control.forceSpeedEnable = 0;
+    control.forceOmegaEnable = 0; 
+
+    // 移動距離を初期化
+    gObsMovingDistance = 0;
+
+    // 時間計測開始
+    clock_t startTime = clock();
+
+    // 加速・定速
+    control.accelSpeed = 1.0;
+    // 強制的に速度を与える
+    control.forceSpeedEnable = 1;
+    control.forceSpeed = MIN_SPEED;
+    while(1){
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at accelereation");
+            break;
+        }
+    }
+
+    // 強制的に速度を0にする
+    control.forceSpeedEnable = 1;
+    control.forceSpeed = 0;
+    // 制御器の更新
+    updateController(&control);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
 
     return TRUE;
 }

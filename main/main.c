@@ -135,11 +135,13 @@ void requestAndWait(const enum CONTROL_REQUEST request){
 }
 
 void searchLefthand(void){
-    const float TIME_OUT = 2.0; // sec
+    const float TIME_OUT = 4.0; // sec
     const float MAX_SPEED = 0.3; // m/s
     const float ACCEL = 1.0; // m/ss
     const float HALF_DISTANCE = 0.045;
     const float DISTANCE = 0.090;
+    const float KETSU_DISTANCE = 0.003;
+    const float KETSU_TIME_OUT = 0.5; // sec
     int result = TRUE;
 
     gIndicatorValue = 6;
@@ -171,13 +173,19 @@ void searchLefthand(void){
             gIndicatorValue = 2;
             result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
             result = turn(M_PI_2, TIME_OUT);
-            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
-            // if(doHipAdjust){
-            //     // けつあて
-            //     requestAndWait(CONT_KETSUATE);
-            //     doHipAdjust = 0;
-            // }
+            if(doHipAdjust){
+                // けつあて
+                result = straightBack(KETSU_TIME_OUT);
+                // ジャイロのバイアスリセット
+                gGyroBiasResetRequest = 1;
+                while(gGyroBiasResetRequest){
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
+                result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                doHipAdjust = 0;
+            }
+            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
         }else if(gObsIsWall[DIREC_FRONT] != 1){
             // 前に壁がなければ前に進む
             gIndicatorValue = 3;
@@ -192,19 +200,34 @@ void searchLefthand(void){
             gIndicatorValue = 1;
             result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
             result = turn(-M_PI_2, TIME_OUT);
-            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
-            // if(doHipAdjust){
-            //     // けつあて
-            //     requestAndWait(CONT_KETSUATE);
-            //     doHipAdjust = 0;
-            // }
+            if(doHipAdjust){
+                // けつあて
+                result = straightBack(KETSU_TIME_OUT);
+                // ジャイロのバイアスリセット
+                gGyroBiasResetRequest = 1;
+                while(gGyroBiasResetRequest){
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
+                result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                doHipAdjust = 0;
+            }
+            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
         }else{
             // それ以外の場合は後ろに進む
             gIndicatorValue = 6;
             result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
             result = turn(M_PI, TIME_OUT);
+            // けつあて
+            result = straightBack(KETSU_TIME_OUT);
+            // ジャイロのバイアスリセット
+            gGyroBiasResetRequest = 1;
+            while(gGyroBiasResetRequest){
+                vTaskDelay(1 / portTICK_PERIOD_MS);
+            }
+            result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
             result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
         }
     }
