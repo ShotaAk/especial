@@ -34,6 +34,7 @@ float gObsSpeed = 0;
 float gObsAngle = 0;
 int gObsDial = 0;
 int gObsIsWall[DIREC_NUM] = {FALSE};
+float gObsWallThresholds[DIREC_NUM] = {0};
 
 float gLogData[LOG_DATA_NUM][LOG_INDEX_NUM] = {{0},{0},{0}};
 int gLogTime[LOG_INDEX_NUM] = {0};

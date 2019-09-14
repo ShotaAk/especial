@@ -15,6 +15,12 @@
 #include "esp_log.h"
 static const char *TAG="Observer";
 
+static float WALL_THRESHOLD[DIREC_NUM] = {
+    [DIREC_FRONT] = 0.148355 - 0.03, 
+    [DIREC_LEFT]  = 0.213455 - 0.03, 
+    [DIREC_RIGHT] = 0.191652 - 0.03, 
+    [DIREC_BACK]  = 0.5}; // volts
+
 
 float normalize(const float angle){
     float normalizedAngle = angle;
@@ -55,29 +61,72 @@ void touchObservation(void){
     }
 }
 
+void updateWallThresholds(void){
+    // 壁センサのしきい値を更新する
+    const int DATA_NUM = 1000;
+    const int WAIT_TIME = 5000;
+    float sum=0;
+
+    // 右壁
+    // 準備時間
+    gIndicatorValue = 4;
+    vTaskDelay(WAIT_TIME / portTICK_PERIOD_MS);
+
+    gIndicatorValue = 7;
+    for(int i=0;i<DATA_NUM; i++){
+        sum += gObjVoltages[OBJ_SENS_R];
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    WALL_THRESHOLD[DIREC_RIGHT] = sum / (float)DATA_NUM;
+    gObsWallThresholds[DIREC_RIGHT] = WALL_THRESHOLD[DIREC_RIGHT];
+    
+
+    // 左壁
+    sum=0;
+    gIndicatorValue = 5;
+    vTaskDelay(WAIT_TIME / portTICK_PERIOD_MS);
+
+    gIndicatorValue = 8;
+    for(int i=0;i<DATA_NUM; i++){
+        sum += gObjVoltages[OBJ_SENS_L];
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    WALL_THRESHOLD[DIREC_LEFT] = sum / (float)DATA_NUM;
+    gObsWallThresholds[DIREC_LEFT] = WALL_THRESHOLD[DIREC_LEFT];
+
+    // 前両壁
+    sum=0;
+    gIndicatorValue = 6;
+    vTaskDelay(WAIT_TIME / portTICK_PERIOD_MS);
+
+    gIndicatorValue = 9;
+    for(int i=0;i<DATA_NUM; i++){
+        sum += (gObjVoltages[OBJ_SENS_FR] + gObjVoltages[OBJ_SENS_FL]);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    WALL_THRESHOLD[DIREC_FRONT] = sum / ((float)DATA_NUM * 2.0);
+    gObsWallThresholds[DIREC_FRONT] = WALL_THRESHOLD[DIREC_FRONT];
+    gIndicatorValue = 0;
+
+}
+
 void wallObservation(void){
     // Object Sensorで壁を検出する
-    const float THRESH_VOLTAGES[DIREC_NUM] = {
-        [DIREC_FRONT] = 0.14, 
-        [DIREC_LEFT]  = 0.15, 
-        [DIREC_RIGHT] = 0.15, 
-        [DIREC_BACK]  = 0.5}; // V
 
-
-    if(gObjVoltages[OBJ_SENS_L] > THRESH_VOLTAGES[DIREC_LEFT]){
+    if(gObjVoltages[OBJ_SENS_L] > WALL_THRESHOLD[DIREC_LEFT]){
         gObsIsWall[DIREC_LEFT] = TRUE;
     }else{
         gObsIsWall[DIREC_LEFT] = FALSE;
     }
 
-    if(gObjVoltages[OBJ_SENS_R] > THRESH_VOLTAGES[DIREC_RIGHT]){
+    if(gObjVoltages[OBJ_SENS_R] > WALL_THRESHOLD[DIREC_RIGHT]){
         gObsIsWall[DIREC_RIGHT] = TRUE;
     }else{
         gObsIsWall[DIREC_RIGHT] = FALSE;
     }
 
     if( (gObjVoltages[OBJ_SENS_FL] + gObjVoltages[OBJ_SENS_FR]) * 0.5 
-            > THRESH_VOLTAGES[DIREC_FRONT]){
+            > WALL_THRESHOLD[DIREC_FRONT]){
         gObsIsWall[DIREC_FRONT] = TRUE;
     }else{
         gObsIsWall[DIREC_FRONT] = FALSE;

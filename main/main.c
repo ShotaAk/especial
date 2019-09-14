@@ -301,6 +301,26 @@ static void TaskMain(void *arg){
 }
 */
 
+void indicateWall(void){
+    // 壁センサの反応に合わせてLEDを点灯させる
+
+    while(1){
+        gIndicatorValue = 0;
+        if(gObsIsWall[DIREC_RIGHT]){
+            gIndicatorValue = 1;
+        }
+        if(gObsIsWall[DIREC_LEFT]){
+            gIndicatorValue = 2;
+        }
+        if(gObsIsWall[DIREC_FRONT]){
+            gIndicatorValue = 3;
+        }
+
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+}
+
 void loggingTest(void){
     static const char *TAG="LoggingTest";
 
@@ -347,12 +367,17 @@ void Debug(void){
     if(loggingIsInitialized() == FALSE){
         loggingInitialize(1, 3000,
                 "gObsMovingDistance", &gObsMovingDistance,
-                "gTargetSpeed", &gTargetSpeed,
-                "gObsSpeed", &gObsSpeed
+                // "gTargetSpeed", &gTargetSpeed,
+                // "gObsSpeed", &gObsSpeed
 
                 // "gObsAngle", &gObsAngle,
                 // "gTargetOmega", &gTargetOmega,
                 // "gGyroZ", &gGyro[AXIS_Z]
+
+                // "gObjVoltagesR", &gObjVoltages[OBJ_SENS_R],
+                // "gObjVoltagesL", &gObjVoltages[OBJ_SENS_L]
+                "gObsIsWallR", &gObsIsWall[DIREC_RIGHT],
+                "gObsIsWallL", &gObsIsWall[DIREC_LEFT]
                 );
     }
     // ロガーの初期化が終わるまで待機
@@ -390,14 +415,13 @@ void Debug(void){
     result = straight(0.045, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
     result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
     result = straight(0.090, endSpeed, TIME_OUT, MAX_SPEED, ACCEL);
-    result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    result = straight(0.090, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
     ESP_LOGI(TAG, "Result is %d",result);
 
 
     // --------------------------------------------
     // 制御終了状態
-    gMotorState = MOTOR_OFF;
     gMotorDuty[RIGHT] = 0;
     gMotorDuty[LEFT] = 0;
     loggingStop();
@@ -409,6 +433,7 @@ void Debug(void){
         gIndicatorValue = 6;
     }
     vTaskDelay(2000 / portTICK_PERIOD_MS);
+    gMotorState = MOTOR_OFF;
 
     // ログの保存
     gIndicatorValue = 9;
@@ -439,6 +464,7 @@ static void TaskMain(void *arg){
                     break;
                 case MODE2_CONFIG:
                     ESP_LOGI(TAG, "CONFIG");
+                    updateWallThresholds();
                     break;
                 case MODE3_DEBUG:
                     ESP_LOGI(TAG, "DEBUG");
@@ -448,6 +474,10 @@ static void TaskMain(void *arg){
                     ESP_LOGI(TAG, "LOG PRINT");
                     loggingLoadPrint();
                     vTaskDelay(2000 / portTICK_PERIOD_MS);
+                    break;
+                case MODE5_DUMMY:
+                    ESP_LOGI(TAG, "CONFIG_PRINT");
+                    indicateWall();
                     break;
                 default:
                     ESP_LOGI(TAG, "ELSE");
