@@ -486,16 +486,14 @@ void search_adachi(int gx, int gy)
     int result = TRUE;
     t_direction glob_nextdir;					//次に向かう方向を記録する変数
 
+    // パラメータ初期化
+    init_maze();
+    mypos.x = mypos.y = 0;
+    mypos.dir = north;
+
     gIndicatorValue = 6;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     gIndicatorValue = 9;
-
-    // ジャイロのバイアスリセット
-    gGyroBiasResetRequest = 1;
-    while(gGyroBiasResetRequest){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
-    gIndicatorValue = 0;
 
     // ロガーの起動
     if(loggingIsInitialized() == FALSE){
@@ -504,14 +502,6 @@ void search_adachi(int gx, int gy)
                 "gTargetSpeed", &gTargetSpeed,
                 "gObsSpeed", &gObsSpeed
 
-                // "gObsAngle", &gObsAngle,
-                // "gTargetOmega", &gTargetOmega,
-                // "gGyroZ", &gGyro[AXIS_Z]
-
-                // "gObjVoltagesR", &gObjVoltages[OBJ_SENS_R],
-                // "gObjVoltagesL", &gObjVoltages[OBJ_SENS_L]
-                // "gObsIsWallR", &gObsIsWall[DIREC_RIGHT],
-                // "gObsIsWallL", &gObsIsWall[DIREC_LEFT]
                 );
     }
     // ロガーの初期化が終わるまで待機
@@ -519,16 +509,18 @@ void search_adachi(int gx, int gy)
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    gIndicatorValue = 0;
+
     // ロガーが起動するまで待機
     loggingStart();
     while(loggingIsStarted() == FALSE){
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
-
-    // パラメータ初期化
-    init_maze();
-    mypos.x = mypos.y = 0;
-    mypos.dir = north;
 
     gMotorState = MOTOR_ON;
 
