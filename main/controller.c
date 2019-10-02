@@ -28,6 +28,7 @@ typedef struct{
     int forceOmegaEnable;
     float forceSpeed;
     float forceOmega;
+    float enableWallControl;
 
 }control_t;
 
@@ -39,14 +40,15 @@ typedef struct{
 }controlGain_t;
 
 void updateController(control_t *control){
-    const controlGain_t speedGain = {4.0, 0.0, 0.0}; // i= 0.1
-    const controlGain_t omegaGain = {0.80, 0.00001, 0.0}; // p = 0.5
+    const controlGain_t speedGain = {6.0, 0.0, 0.0}; // i= 0.1
+    const controlGain_t omegaGain = {0.80, 0.00002, 0.0}; // p = 0.5
 
     // フィードフォワードパラメータ
     const float SPEED_FF_GAIN = 1.5;
     const float SPEED_ACCEL_FF_GAIN = 0.0;
     const float OMEGA_FF_GAIN = 0.1;
     const float OMEGA_ACCEL_FF_GAIN = 0;
+    const float OMEGA_WALL_GAIN = 0.5;
 
     static float prevTargetSpeed = 0;
     static float prevTargetOmega = 0;
@@ -136,6 +138,15 @@ void updateController(control_t *control){
         + sumOmegaError * omegaGain.Ki;
     MotorVoltage[RIGHT] -= voltageOmegaFB;
     MotorVoltage[LEFT]  += voltageOmegaFB;
+    // 壁制御のフィードバック
+    if(control->enableWallControl){
+        if(gObsIsWall[DIREC_RIGHT] && gObsIsWall[DIREC_LEFT]){
+            float wallError = gObsWallError[RIGHT] - gObsWallError[LEFT];
+            float voltageWallFB = wallError * OMEGA_WALL_GAIN;
+            MotorVoltage[RIGHT] -= voltageWallFB;
+            MotorVoltage[LEFT]  += voltageWallFB;
+        }
+    }
 
     // 印加電圧リミット
     const float voltageLimit = 3.0; // voltage
@@ -181,6 +192,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     control.accelOmega = 0;
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
+    control.enableWallControl = 1;
 
     // TODO:逆走機能を設ける
     if(targetDistance < 0 || endSpeed < 0 || timeout < 0){
@@ -390,6 +402,7 @@ int turn(const float targetAngle, const float timeout){
     control.accelOmega = 0;
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
+    control.enableWallControl = 0;
 
     float startAngle = gObsAngle; // 制御開始前の角度取得
 
@@ -485,6 +498,7 @@ int straightBack(const float timeout){
     control.accelOmega = 0;
     control.forceSpeedEnable = 0;
     control.forceOmegaEnable = 0; 
+    control.enableWallControl = 0;
 
     // 移動距離を初期化
     gObsMovingDistance = 0;
