@@ -878,87 +878,50 @@ void Debug(void){
 
     gIndicatorValue = 9;
     // ロガーの起動
-    if(loggingIsInitialized() == FALSE){
-        loggingInitialize(1, 3000,
-                "gObsMovingDistance", &gObsMovingDistance,
-                "gTargetSpeed", &gTargetSpeed,
-                "gObsSpeed", &gObsSpeed
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
 
-                // "gObsAngle", &gObsAngle,
-                // "gTargetOmega", &gTargetOmega,
-                // "gGyroZ", &gGyro[AXIS_Z]
-
-                // "gObjVoltagesR", &gObjVoltages[OBJ_SENS_R],
-                // "gObjVoltagesL", &gObjVoltages[OBJ_SENS_L]
-                // "gObsIsWallR", &gObsIsWall[DIREC_RIGHT],
-                // "gObsIsWallL", &gObsIsWall[DIREC_LEFT]
-                );
-    }
-    // ロガーの初期化が終わるまで待機
-    while(loggingIsInitialized() == FALSE){
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
     gIndicatorValue = 0;
-
-    // ジャイロのバイアスリセット
-    gIndicatorValue = 6;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gGyroBiasResetRequest = 1;
-    while(gGyroBiasResetRequest){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
-
-    // ロガーが起動するまで待機
-    loggingStart();
-    while(loggingIsStarted() == FALSE){
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    }
-    gIndicatorValue = 0;
-
-    int result = TRUE;
-
-    // --------------------------------------------
-
-    const float TIME_OUT = 2.0; // sec
-    const float MAX_SPEED = 0.3; // m/s
-    const float ACCEL = 1.0; // m/ss
 
     gMotorState = MOTOR_ON;
 
-    result = straight(0.045, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
-    result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-    // result = turn(-M_PI_2, TIME_OUT);
-
-    // KETSUATE
-    // result = straight(-0.020, 0.0, 0.5, MAX_SPEED, ACCEL);
-    // result = straight(0.010, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
-
-    // result = straight(0.045, 0.3, TIME_OUT, MAX_SPEED, ACCEL);
-    // result = straight(0.045, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-
-    ESP_LOGI(TAG, "Result is %d",result);
-
-
-    // --------------------------------------------
-    // 制御終了状態
-    gMotorDuty[RIGHT] = 0;
-    gMotorDuty[LEFT] = 0;
-    loggingStop();
-
-    // 結果の表示
-    if(result){
-        gIndicatorValue = 3;
-    }else{
-        gIndicatorValue = 6;
-    }
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    gMotorState = MOTOR_OFF;
-
-    // ログの保存
+    gMotorDuty[LEFT] = 50.0;
+    gIndicatorValue = 3;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = 80.0;
+    gIndicatorValue = 6;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = 100.0;
     gIndicatorValue = 9;
-    loggingSave();
-    loggingReset();
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = 80.0;
+    gIndicatorValue = 6;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = 50.0;
+    gIndicatorValue = 3;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    gMotorDuty[LEFT] = 0.0;
     gIndicatorValue = 0;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+
+    gMotorDuty[LEFT] = -50.0;
+    gIndicatorValue = 3;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = -80.0;
+    gIndicatorValue = 6;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = -100.0;
+    gIndicatorValue = 9;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = -80.0;
+    gIndicatorValue = 6;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = -50.0;
+    gIndicatorValue = 3;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    gMotorState = MOTOR_OFF;
+    gMotorDuty[RIGHT] = 0.0;
 
     // ダイアルを初期化
     gObsDial = 0;
