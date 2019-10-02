@@ -98,6 +98,7 @@ extern float gObsAngle; // radians
 extern int gObsDial; // 0~9
 extern int gObsIsWall[DIREC_NUM]; // 0 or 1
 extern float gObsWallThresholds[DIREC_NUM];
+extern float gObsWallError[SIDE_NUM];
 
 extern float gLogData[LOG_DATA_NUM][LOG_INDEX_NUM];
 extern int gLogTime[LOG_INDEX_NUM];

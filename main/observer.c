@@ -133,6 +133,12 @@ void wallObservation(void){
     }
 }
 
+void wallErrorObservation(void){
+    // 壁制御用にエラー値を出力する
+    gObsWallError[RIGHT] = gObjVoltages[OBJ_SENS_R] - WALL_THRESHOLD[DIREC_RIGHT];
+    gObsWallError[LEFT] = gObjVoltages[OBJ_SENS_L] - WALL_THRESHOLD[DIREC_LEFT];
+}
+
 void movingDistanceObservation(void){
     // エンコーダの値から走行距離と走行速度を計算する
     static float prevLeft, prevRight;
@@ -230,6 +236,7 @@ void TaskObservation(void *arg){
         angleObservation();
         dialObservation();
         wallObservation();
+        wallErrorObservation();
 
         ESP_LOGD(TAG, "Dial: %d", gObsDial);
 
