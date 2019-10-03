@@ -11,4 +11,5 @@ idf_component_register(SRCS
     "controller.c"
     "observer.c"
     "logger.c"
+    "search.c"
     INCLUDE_DIRS ".")
