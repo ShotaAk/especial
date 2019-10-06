@@ -37,18 +37,6 @@ enum OBJ_SENS{
     OBJ_SENS_FR,
 };
 
-enum CONTROL_REQUEST{
-    CONT_NONE,
-    CONT_FORWARD,
-    CONT_HALF_FORWARD,
-    CONT_TURN_LEFT,
-    CONT_TURN_RIGHT,
-    CONT_TURN_BACK,
-    CONT_STOP,
-    CONT_KETSUATE,
-    CONT_ENKAI,
-    CONT_FINISH,
-};
 
 enum MODE{
     MODE0_SEARCH = 0,
@@ -86,7 +74,6 @@ extern int gIsWall[DIREC_NUM];
 
 extern float gMovingDistance; // meters
 
-extern enum CONTROL_REQUEST gControlRequest;
 extern float gTargetSpeed; // m/s
 extern float gTargetOmega; // rad/s
 

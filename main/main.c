@@ -233,48 +233,37 @@ void Debug(void){
     static const char *TAG="Debug";
 
     gIndicatorValue = 9;
-    // ロガーの起動
     vTaskDelay(3000 / portTICK_PERIOD_MS);
 
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
     gIndicatorValue = 0;
-
     gMotorState = MOTOR_ON;
 
-    gMotorDuty[LEFT] = 50.0;
-    gIndicatorValue = 3;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = 80.0;
-    gIndicatorValue = 6;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = 100.0;
-    gIndicatorValue = 9;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = 80.0;
-    gIndicatorValue = 6;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = 50.0;
-    gIndicatorValue = 3;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    int result;
 
-    gMotorDuty[LEFT] = 0.0;
-    gIndicatorValue = 0;
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    const float DISTANCE = 0.090;
+    const float HALF_DISTANCE = 0.045;
+    const float END_SPEED = 0.3; // m/s
+    const float TIME_OUT = 4.0; // sec
+    const float MAX_SPEED = 0.3; // m/s
+    const float ACCEL = 1.0; // m/ss
 
-    gMotorDuty[LEFT] = -50.0;
-    gIndicatorValue = 3;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = -80.0;
-    gIndicatorValue = 6;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = -100.0;
-    gIndicatorValue = 9;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = -80.0;
-    gIndicatorValue = 6;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = -50.0;
-    gIndicatorValue = 3;
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    // 4x4区画を1周する
+    result = straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+    for(int i=0;i<4;i++){
+        result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+        result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+        result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+        result = turn(-M_PI_2, TIME_OUT);
+        result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    }
+
+    result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
     gMotorState = MOTOR_OFF;
     gMotorDuty[RIGHT] = 0.0;
