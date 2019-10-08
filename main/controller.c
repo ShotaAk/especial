@@ -249,7 +249,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     int stopControlEnable = FALSE;
     if(endSpeed < MIN_SPEED){
         // 終端速度が最低駆動トルクの速度より小さい場合は、停止用の距離を設ける
-        stopDistance = 0.01;
+        stopDistance = 0.005;
         stopControlEnable = TRUE;
     }
     control.accelSpeed = DECEL;

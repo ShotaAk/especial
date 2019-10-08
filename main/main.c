@@ -241,30 +241,49 @@ void Debug(void){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
     gIndicatorValue = 0;
-    gMotorState = MOTOR_ON;
 
-    int result;
+    // --------------ロガーの設定-------------
+    loggingInitialize(1, 3000,
+            "gObsMovingDistance", &gObsMovingDistance,
+            "gTargetSpeed", &gTargetSpeed,
+            "gObsSpeed", &gObsSpeed);
+    while(loggingIsInitialized() == FALSE){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    loggingStart();
+    while(loggingIsStarted() == FALSE){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    // --------------------------------------
 
     const float DISTANCE = 0.090;
     const float HALF_DISTANCE = 0.045;
     const float END_SPEED = 0.3; // m/s
-    const float TIME_OUT = 4.0; // sec
+    const float TIME_OUT = 2.0; // sec
     const float MAX_SPEED = 0.3; // m/s
     const float ACCEL = 1.0; // m/ss
 
-    gMotorDuty[RIGHT] = 10;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gMotorDuty[RIGHT] = -10;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gMotorDuty[RIGHT] = 0;
+    gMotorState = MOTOR_ON;
+    int result;
 
-    gMotorDuty[LEFT] = 10;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = -10;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gMotorDuty[LEFT] = 0;
+    straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
     gMotorState = MOTOR_OFF;
+
+
+    // --------------ロガーの設定-------------
+    gIndicatorValue = 9;
+    loggingStop();
+    while(loggingIsStarted() == TRUE){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    loggingSave();
+    gIndicatorValue = 0;
+    // --------------------------------------
+
 
     // ダイアルを初期化
     gObsDial = 0;
