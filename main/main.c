@@ -252,21 +252,19 @@ void Debug(void){
     const float MAX_SPEED = 0.3; // m/s
     const float ACCEL = 1.0; // m/ss
 
-    // 4x4区画を1周する
-    result = straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    gMotorDuty[RIGHT] = 10;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gMotorDuty[RIGHT] = -10;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gMotorDuty[RIGHT] = 0;
 
-    for(int i=0;i<4;i++){
-        result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-        result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-        result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-        result = turn(-M_PI_2, TIME_OUT);
-        result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    }
-
-    result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    gMotorDuty[LEFT] = 10;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = -10;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gMotorDuty[LEFT] = 0;
 
     gMotorState = MOTOR_OFF;
-    gMotorDuty[RIGHT] = 0.0;
 
     // ダイアルを初期化
     gObsDial = 0;
@@ -286,7 +284,7 @@ static void TaskMain(void *arg){
                 case MODE0_SEARCH:
                     ESP_LOGI(TAG, "SEARCH");
                     // searchLefthand();
-                    searchAdachi(0,3);
+                    searchAdachi(1,1);
                     // search_adachi(0,3);
                     break;
                 case MODE1_FAST_RUN:

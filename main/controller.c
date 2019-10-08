@@ -125,8 +125,8 @@ void updateController(control_t *control){
     // 角速度のフィードフォワード
     float voltageOmegaFF = TargetOmega * OMEGA_FF_GAIN 
         + (TargetOmega - prevTargetOmega) * OMEGA_ACCEL_FF_GAIN;;
-    MotorVoltage[RIGHT] -= voltageOmegaFF;
-    MotorVoltage[LEFT]  += voltageOmegaFF;
+    MotorVoltage[RIGHT] += voltageOmegaFF;
+    MotorVoltage[LEFT]  -= voltageOmegaFF;
 
     // 直進速度のフィードバック
     float voltageSpeedFB = speedError * speedGain.Kp
@@ -136,15 +136,15 @@ void updateController(control_t *control){
     // 角速度のフィードバック
     float voltageOmegaFB = omegaError * omegaGain.Kp
         + sumOmegaError * omegaGain.Ki;
-    MotorVoltage[RIGHT] -= voltageOmegaFB;
-    MotorVoltage[LEFT]  += voltageOmegaFB;
+    MotorVoltage[RIGHT] += voltageOmegaFB;
+    MotorVoltage[LEFT]  -= voltageOmegaFB;
     // 壁制御のフィードバック
     if(control->enableWallControl){
         if(gObsIsWall[DIREC_RIGHT] && gObsIsWall[DIREC_LEFT]){
             float wallError = gObsWallError[RIGHT] - gObsWallError[LEFT];
             float voltageWallFB = wallError * OMEGA_WALL_GAIN;
-            MotorVoltage[RIGHT] -= voltageWallFB;
-            MotorVoltage[LEFT]  += voltageWallFB;
+            MotorVoltage[RIGHT] += voltageWallFB;
+            MotorVoltage[LEFT]  -= voltageWallFB;
         }
     }
 

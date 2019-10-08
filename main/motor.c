@@ -122,8 +122,8 @@ void TaskMotorDrive(void *arg)
     pwm_config.counter_mode = MCPWM_UP_COUNTER;
     pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
 
-    MC_TIMER[RIGHT] = MCPWM_TIMER_0;
-    MC_TIMER[LEFT] = MCPWM_TIMER_1;
+    MC_TIMER[LEFT] = MCPWM_TIMER_0;
+    MC_TIMER[RIGHT] = MCPWM_TIMER_1;
 
     mcpwm_init(MCPWM_UNIT_0, MC_TIMER[RIGHT], &pwm_config);    //Configure PWM0A & PWM0B with above settings
     mcpwm_init(MCPWM_UNIT_0, MC_TIMER[LEFT], &pwm_config);    //Configure PWM0A & PWM0B with above settings
