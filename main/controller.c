@@ -46,7 +46,7 @@ void updateController(control_t *control){
     // フィードフォワードパラメータ
     const float SPEED_FF_GAIN = 1.5;
     const float SPEED_ACCEL_FF_GAIN = 0.0;
-    const float OMEGA_FF_GAIN = 0.1;
+    const float OMEGA_FF_GAIN = 1.0;
     const float OMEGA_ACCEL_FF_GAIN = 0;
     const float OMEGA_WALL_GAIN = 0.5;
 
