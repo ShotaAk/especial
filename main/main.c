@@ -231,6 +231,7 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
+    static const int LOGGING_ENABLE = 0;
 
     gIndicatorValue = 9;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
@@ -243,16 +244,18 @@ void Debug(void){
     gIndicatorValue = 0;
 
     // --------------ロガーの設定-------------
-    loggingInitialize(1, 3000,
-            "gObsMovingDistance", &gObsMovingDistance,
-            "gTargetSpeed", &gTargetSpeed,
-            "gObsSpeed", &gObsSpeed);
-    while(loggingIsInitialized() == FALSE){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
-    loggingStart();
-    while(loggingIsStarted() == FALSE){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+    if(LOGGING_ENABLE){
+        loggingInitialize(1, 3000,
+                "gObsMovingDistance", &gObsMovingDistance,
+                "gTargetSpeed", &gTargetSpeed,
+                "gObsSpeed", &gObsSpeed);
+        while(loggingIsInitialized() == FALSE){
+            vTaskDelay(1 / portTICK_PERIOD_MS);
+        }
+        loggingStart();
+        while(loggingIsStarted() == FALSE){
+            vTaskDelay(1 / portTICK_PERIOD_MS);
+        }
     }
     // --------------------------------------
 
@@ -266,22 +269,34 @@ void Debug(void){
     gMotorState = MOTOR_ON;
     int result;
 
-    straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // // 外周をグルって回るやつ
+    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    // for(int i=0; i<4; i++){
+    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    //     straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    //     turn(-M_PI_2, TIME_OUT);
+    //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    // }
+
+    turn(-M_PI_2, TIME_OUT);
+    turn(-M_PI_2, TIME_OUT);
+    turn(-M_PI_2, TIME_OUT);
+    turn(-M_PI_2, TIME_OUT);
 
     gMotorState = MOTOR_OFF;
 
 
     // --------------ロガーの設定-------------
-    gIndicatorValue = 9;
-    loggingStop();
-    while(loggingIsStarted() == TRUE){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+    if(LOGGING_ENABLE){
+        gIndicatorValue = 9;
+        loggingStop();
+        while(loggingIsStarted() == TRUE){
+            vTaskDelay(1 / portTICK_PERIOD_MS);
+        }
+        loggingSave();
+        gIndicatorValue = 0;
     }
-    loggingSave();
-    gIndicatorValue = 0;
     // --------------------------------------
 
 
@@ -303,7 +318,7 @@ static void TaskMain(void *arg){
                 case MODE0_SEARCH:
                     ESP_LOGI(TAG, "SEARCH");
                     // searchLefthand();
-                    searchAdachi(1,1);
+                    searchAdachi(3,0);
                     // search_adachi(0,3);
                     break;
                 case MODE1_FAST_RUN:

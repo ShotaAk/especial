@@ -95,11 +95,10 @@ void updateController(control_t *control){
         }
     }
 
-
     // 目標速度をタイヤの速度に変換する
     float MotorVoltage[SIDE_NUM] = {0};
 
-    /* -------------------フィードバック項の計算------------------------------*/
+    /* --------フィードフォワード＆フィードバック項の計算---------------------*/
     float speedError = TargetSpeed - gObsSpeed;
     float omegaError = TargetOmega - gGyro[AXIS_Z];
 
@@ -115,7 +114,6 @@ void updateController(control_t *control){
     if(fabs(sumOmegaError) >= ERROR_MAX){
         sumOmegaError = copysign(ERROR_MAX, sumOmegaError);
     }
-    /* -----------------------------------------------------------------------*/
 
     // 直進速度のフィードフォワード
     float voltageSpeedFF = TargetSpeed * SPEED_FF_GAIN 
@@ -140,6 +138,7 @@ void updateController(control_t *control){
     MotorVoltage[LEFT]  -= voltageOmegaFB;
     // 壁制御のフィードバック
     if(control->enableWallControl){
+        // 左右に壁があるときのみ、壁制御を実施する
         if(gObsIsWall[DIREC_RIGHT] && gObsIsWall[DIREC_LEFT]){
             float wallError = gObsWallError[RIGHT] - gObsWallError[LEFT];
             float voltageWallFB = wallError * OMEGA_WALL_GAIN;
@@ -147,6 +146,8 @@ void updateController(control_t *control){
             MotorVoltage[LEFT]  -= voltageWallFB;
         }
     }
+
+    /* -----------------------------------------------------------------------*/
 
     // 印加電圧リミット
     const float voltageLimit = 3.0; // voltage
