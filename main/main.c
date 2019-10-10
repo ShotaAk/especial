@@ -231,7 +231,7 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
-    static const int LOGGING_ENABLE = 1; // ロギングしたいときはここを１にする
+    static const int LOGGING_ENABLE = 0; // ロギングしたいときはここを１にする
 
     gIndicatorValue = 9;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
@@ -246,10 +246,12 @@ void Debug(void){
     // --------------ロガーの設定-------------
     if(LOGGING_ENABLE){
         loggingInitialize(1, 3000,
-                "gObsMovingDistance", &gObsMovingDistance,
-                // "gDebugValue", &gDebugValue,
+                // "gObsMovingDistance", &gObsMovingDistance,
+                // "gTargetSpeed", &gTargetSpeed,
+                // "gObsSpeed", &gObsSpeed);
                 "gTargetSpeed", &gTargetSpeed,
-                "gObsSpeed", &gObsSpeed);
+                "gObsWheelSpeedLeft", &gObsWheelSpeed[LEFT],
+                "gObsWheelSpeedRight", &gObsWheelSpeed[RIGHT]);
         while(loggingIsInitialized() == FALSE){
             vTaskDelay(1 / portTICK_PERIOD_MS);
         }
@@ -274,10 +276,13 @@ void Debug(void){
 
     // 16区画直進
     // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // for(int i=0; i<5; i++){
+    // for(int i=0; i<14; i++){
     //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
-    straight(DISTANCE*6.0, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    
+    // 16区画直進を１つの関数で
+    straight(DISTANCE*15.0, 0.0, 10.0, MAX_SPEED, ACCEL);
 
     // // 外周をグルって回るやつ
     // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
