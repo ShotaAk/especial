@@ -231,7 +231,7 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
-    static const int LOGGING_ENABLE = 0;
+    static const int LOGGING_ENABLE = 0; // ロギングしたいときはここを１にする
 
     gIndicatorValue = 9;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
@@ -265,6 +265,8 @@ void Debug(void){
     const float TIME_OUT = 2.0; // sec
     const float MAX_SPEED = 0.3; // m/s
     const float ACCEL = 1.0; // m/ss
+    const float KETSU_DISTANCE = 0.003;
+    const float KETSU_TIME_OUT = 0.5; // sec
 
     gMotorState = MOTOR_ON;
     int result;
@@ -279,10 +281,27 @@ void Debug(void){
     //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
 
-    turn(-M_PI_2, TIME_OUT);
-    turn(-M_PI_2, TIME_OUT);
-    turn(-M_PI_2, TIME_OUT);
-    turn(-M_PI_2, TIME_OUT);
+    // けつあて
+    result = straightBack(KETSU_TIME_OUT);
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+    // 回転
+    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // turn(M_PI_2, TIME_OUT);
+    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+
+    // スラローム
+    gIndicatorValue = 3;
+    slalom(0, END_SPEED, TIME_OUT);
+    gIndicatorValue = 0;
+
+    straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
 
     gMotorState = MOTOR_OFF;
 

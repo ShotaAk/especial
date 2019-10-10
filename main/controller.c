@@ -404,6 +404,139 @@ int turn(const float targetAngle, const float timeout){
     return TRUE;
 }
 
+int slalom(const int isTurnRight, const float endSpeed, const float timeout){
+    // スラロームやりたい
+    const float MAX_OMEGA= 5; // 最大角速度 rad/s
+    const float ACCEL_DECEL = 50; // 加減速度 rad/s^2
+    const float OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
+    const float ACCEL_DECEL_ANGLE = 0.436332313; // 加減速角度 rad
+    const float KEEP_OMEGA_ANGLE = 0.6981317008; // 低速角度 rad
+
+    control_t control;
+    // 直進速度は一定速
+    control.maxSpeed = endSpeed;
+    control.invertSpeed = 0;
+    control.accelSpeed = 0;
+    control.forceSpeedEnable = 1;
+    control.forceSpeed = endSpeed;
+    // 角速度を変化させる
+    control.maxOmega = MAX_OMEGA;
+    control.invertOmega = 0;
+    control.accelOmega = 0;
+    control.forceOmegaEnable = 0; 
+    // 壁制御はしない
+    control.enableWallControl = 0;
+
+    if(isTurnRight){
+        control.invertOmega = 1;
+    }
+
+    float startAngle = gObsAngle; // 制御開始前の角度取得
+    // 時間計測開始
+    clock_t startTime = clock();
+
+    // オフセット距離を走行
+    gObsMovingDistance = 0; // 移動距離を初期化
+    while(1){
+        // 走行距離がオフセット距離を超えたらループを抜ける
+        if(gObsMovingDistance > OFFSET_DISTANCE){
+            break;
+        }
+
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at offset");
+            return FALSE;
+        }
+    }
+
+    // 一定角度に達するまで加速
+    control.accelOmega = ACCEL_DECEL;
+    while(1){
+        // 回転角度が一定角度を超えたらループを抜ける
+        if(fabs(gObsAngle - startAngle) > ACCEL_DECEL_ANGLE){
+            break;
+        }
+
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at accelereation");
+            return FALSE;
+        }
+    }
+
+    // 一定角度に達するまで低速
+    control.accelOmega = 0;
+    while(1){
+        // 回転角度が一定角度を超えたらループを抜ける
+        if(fabs(gObsAngle - startAngle) > ACCEL_DECEL_ANGLE+KEEP_OMEGA_ANGLE){
+            break;
+        }
+
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at keeping omega");
+            return FALSE;
+        }
+    }
+
+    // 角速度が０以下になるまで減速
+    control.accelOmega = -ACCEL_DECEL;
+    while(1){
+        // 回転角度が一定角度を超えたらループを抜ける
+        if(fabs(gObsAngle - startAngle) > 2.0*ACCEL_DECEL_ANGLE+KEEP_OMEGA_ANGLE){
+            break;
+        }
+
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at deceleration");
+            return FALSE;
+        }
+    }
+
+    // オフセット距離を走行
+    // 角速度を0にする
+    control.accelOmega = 0;
+    control.forceOmegaEnable = 1;
+    control.forceOmega = 0;
+    gObsMovingDistance = 0; // 移動距離を初期化
+    while(1){
+        // 走行距離がオフセット距離を超えたらループを抜ける
+        if(gObsMovingDistance > OFFSET_DISTANCE){
+            break;
+        }
+
+        // 制御器の更新
+        updateController(&control);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+
+        // タイムアウトチェック
+        if(timeout < (float)(clock() - startTime)/CLOCKS_PER_SEC){
+            ESP_LOGE(TAG, "Timeout at offset");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 int straightBack(const float timeout){
     // けつあてようの逆走行
     const float MIN_SPEED = 0.2; // m/s
