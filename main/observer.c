@@ -170,6 +170,9 @@ void movingDistanceObservation(void){
     velocity[LEFT] = velocity[LEFT] * 0.1 + prevVelocity[LEFT] * 0.9;
     velocity[RIGHT] = velocity[RIGHT] * 0.1 + prevVelocity[RIGHT] * 0.9;
 
+    // 速度を格納
+    gObsWheelSpeed[LEFT] = velocity[LEFT];
+    gObsWheelSpeed[RIGHT] = velocity[RIGHT];
     // 車体速度に変換
     gObsSpeed = (velocity[LEFT] + velocity[RIGHT]) / 2.0;
 

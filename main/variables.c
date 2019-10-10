@@ -30,6 +30,7 @@ int gObsBatteryIsLow = FALSE;
 int gObsTouch[SIDE_NUM] = {FALSE};
 float gObsMovingDistance = 0;
 float gObsSpeed = 0;
+float gObsWheelSpeed[SIDE_NUM] = {0};
 float gObsAngle = 0;
 int gObsDial = 0;
 int gObsIsWall[DIREC_NUM] = {FALSE};
@@ -38,4 +39,6 @@ float gObsWallError[SIDE_NUM] = {0};
 
 float gLogData[LOG_DATA_NUM][LOG_INDEX_NUM] = {{0},{0},{0}};
 int gLogTime[LOG_INDEX_NUM] = {0};
+
+float gDebugValue = 0;
 

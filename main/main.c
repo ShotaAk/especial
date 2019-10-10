@@ -231,7 +231,7 @@ void loggingTest(void){
 
 void Debug(void){
     static const char *TAG="Debug";
-    static const int LOGGING_ENABLE = 0; // ロギングしたいときはここを１にする
+    static const int LOGGING_ENABLE = 1; // ロギングしたいときはここを１にする
 
     gIndicatorValue = 9;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
@@ -247,6 +247,7 @@ void Debug(void){
     if(LOGGING_ENABLE){
         loggingInitialize(1, 3000,
                 "gObsMovingDistance", &gObsMovingDistance,
+                // "gDebugValue", &gDebugValue,
                 "gTargetSpeed", &gTargetSpeed,
                 "gObsSpeed", &gObsSpeed);
         while(loggingIsInitialized() == FALSE){
@@ -271,6 +272,13 @@ void Debug(void){
     gMotorState = MOTOR_ON;
     int result;
 
+    // 16区画直進
+    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    // for(int i=0; i<5; i++){
+    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    // }
+    straight(DISTANCE*6.0, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+
     // // 外周をグルって回るやつ
     // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // for(int i=0; i<4; i++){
@@ -281,6 +289,7 @@ void Debug(void){
     //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
 
+    /*
     // けつあて
     result = straightBack(KETSU_TIME_OUT);
     // ジャイロのバイアスリセット
@@ -291,21 +300,14 @@ void Debug(void){
     result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
-    // 回転
-    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-    // turn(M_PI_2, TIME_OUT);
-    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-
     // スラローム
     gIndicatorValue = 3;
     slalom(0, END_SPEED, TIME_OUT);
     gIndicatorValue = 0;
-
     straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    */
 
     gMotorState = MOTOR_OFF;
-
-
     // --------------ロガーの設定-------------
     if(LOGGING_ENABLE){
         gIndicatorValue = 9;
@@ -337,7 +339,7 @@ static void TaskMain(void *arg){
                 case MODE0_SEARCH:
                     ESP_LOGI(TAG, "SEARCH");
                     // searchLefthand();
-                    searchAdachi(3,0);
+                    searchAdachi(5,12);
                     // search_adachi(0,3);
                     break;
                 case MODE1_FAST_RUN:
