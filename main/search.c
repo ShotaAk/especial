@@ -431,10 +431,11 @@ void initMaze(void)
     WallMap[0][0].east = WallMap[1][0].west = WALL; // スタート地点の右の壁を追加する
 }
 
-void searchAdachi(const int goalX, const int goalY){
+void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
     //引数goalX,goalYに向かって足立法で迷路を探索する
     const float TIME_OUT = 4.0; // sec
     const float MAX_SPEED = 0.3; // m/s
+    const float END_SPEED = 0.3; // m/s
     const float ACCEL = 1.0; // m/ss
     const float HALF_DISTANCE = 0.045;
     const float DISTANCE = 0.090;
@@ -462,6 +463,14 @@ void searchAdachi(const int goalX, const int goalY){
     gIndicatorValue = 0;
     gMotorState = MOTOR_ON;
 
+    // けつあて
+    result = straightBack(KETSU_TIME_OUT);
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
     switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir)) // 次に行く方向を戻り値とする関数を呼ぶ
     {
@@ -522,46 +531,54 @@ void searchAdachi(const int goalX, const int goalY){
                 break;
 
             case LOCAL_RIGHT:
-                if(gObsIsWall[DIREC_LEFT] == 1){
-                    // 左に壁があればけつあて
-                    doHipAdjust = 1;
-                }
-                result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-                result = turn(-M_PI_2, TIME_OUT);
-
-                if(doHipAdjust){
-                    // けつあて
-                    result = straightBack(KETSU_TIME_OUT);
-                    // ジャイロのバイアスリセット
-                    gGyroBiasResetRequest = 1;
-                    while(gGyroBiasResetRequest){
-                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                if(slalomEnable){
+                    slalom(TRUE, END_SPEED, TIME_OUT);
+                }else{
+                    if(gObsIsWall[DIREC_LEFT] == 1){
+                        // 左に壁があればけつあて
+                        doHipAdjust = 1;
                     }
-                    result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-                    doHipAdjust = 0;
+                    result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+                    result = turn(-M_PI_2, TIME_OUT);
+
+                    if(doHipAdjust){
+                        // けつあて
+                        result = straightBack(KETSU_TIME_OUT);
+                        // ジャイロのバイアスリセット
+                        gGyroBiasResetRequest = 1;
+                        while(gGyroBiasResetRequest){
+                            vTaskDelay(1 / portTICK_PERIOD_MS);
+                        }
+                        result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                        doHipAdjust = 0;
+                    }
+                    result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                 }
-                result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                 break;
 
             case LOCAL_LEFT:
-                if(gObsIsWall[DIREC_RIGHT] == 1){
-                    // 右に壁があればけつあて
-                    doHipAdjust = 1;
-                }
-                result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-                result = turn(M_PI_2, TIME_OUT);
-                if(doHipAdjust){
-                    // けつあて
-                    result = straightBack(KETSU_TIME_OUT);
-                    // ジャイロのバイアスリセット
-                    gGyroBiasResetRequest = 1;
-                    while(gGyroBiasResetRequest){
-                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                if(slalomEnable){
+                    slalom(FALSE, END_SPEED, TIME_OUT);
+                }else{
+                    if(gObsIsWall[DIREC_RIGHT] == 1){
+                        // 右に壁があればけつあて
+                        doHipAdjust = 1;
                     }
-                    result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-                    doHipAdjust = 0;
+                    result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+                    result = turn(M_PI_2, TIME_OUT);
+                    if(doHipAdjust){
+                        // けつあて
+                        result = straightBack(KETSU_TIME_OUT);
+                        // ジャイロのバイアスリセット
+                        gGyroBiasResetRequest = 1;
+                        while(gGyroBiasResetRequest){
+                            vTaskDelay(1 / portTICK_PERIOD_MS);
+                        }
+                        result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                        doHipAdjust = 0;
+                    }
+                    result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                 }
-                result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                 break;
 
             case LOCAL_REAR:

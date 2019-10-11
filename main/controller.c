@@ -408,7 +408,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     // スラロームやりたい
     const float MAX_OMEGA= 5; // 最大角速度 rad/s
     const float ACCEL_DECEL = 50; // 加減速度 rad/s^2
-    const float OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
+    const float OFFSET_DISTANCE = 0.008; // オフセット直線走行距離 meter
     const float ACCEL_DECEL_ANGLE = 0.436332313; // 加減速角度 rad
     const float KEEP_OMEGA_ANGLE = 0.6981317008; // 低速角度 rad
 

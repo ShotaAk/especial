@@ -276,13 +276,13 @@ void Debug(void){
 
     // 16区画直進
     // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // for(int i=0; i<14; i++){
+    // for(int i=0; i<2; i++){
     //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
     // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
     
     // 16区画直進を１つの関数で
-    straight(DISTANCE*15.0, 0.0, 10.0, MAX_SPEED, ACCEL);
+    // straight(DISTANCE*3.0, 0.0, 10.0, MAX_SPEED, ACCEL);
 
     // // 外周をグルって回るやつ
     // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
@@ -294,7 +294,6 @@ void Debug(void){
     //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
 
-    /*
     // けつあて
     result = straightBack(KETSU_TIME_OUT);
     // ジャイロのバイアスリセット
@@ -310,7 +309,6 @@ void Debug(void){
     slalom(0, END_SPEED, TIME_OUT);
     gIndicatorValue = 0;
     straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-    */
 
     gMotorState = MOTOR_OFF;
     // --------------ロガーの設定-------------
@@ -344,7 +342,7 @@ static void TaskMain(void *arg){
                 case MODE0_SEARCH:
                     ESP_LOGI(TAG, "SEARCH");
                     // searchLefthand();
-                    searchAdachi(5,12);
+                    searchAdachi(2,1,FALSE);
                     // search_adachi(0,3);
                     break;
                 case MODE1_FAST_RUN:
