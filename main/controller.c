@@ -29,6 +29,7 @@ typedef struct{
     float forceSpeed;
     float forceOmega;
     float enableWallControl;
+    int initializeSumOfError;
 
 }control_t;
 
@@ -113,6 +114,12 @@ void updateController(control_t *control){
     }
     if(fabs(sumOmegaError) >= ERROR_MAX){
         sumOmegaError = copysign(ERROR_MAX, sumOmegaError);
+    }
+
+    // 差分の初期化
+    if(control->initializeSumOfError){
+        sumSpeedError = 0;
+        sumOmegaError = 0;
     }
 
     // 直進速度のフィードフォワード
@@ -578,6 +585,8 @@ int straightBack(const float timeout){
     // 強制的に速度を0にする
     control.forceSpeedEnable = 1;
     control.forceSpeed = 0;
+    // 差分を初期化する
+    control.initializeSumOfError = 1;
     // 制御器の更新
     updateController(&control);
     vTaskDelay(1 / portTICK_PERIOD_MS);
