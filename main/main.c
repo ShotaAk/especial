@@ -249,9 +249,9 @@ void Debug(void){
                 // "gObsMovingDistance", &gObsMovingDistance,
                 // "gTargetSpeed", &gTargetSpeed,
                 // "gObsSpeed", &gObsSpeed);
-                "gTargetSpeed", &gTargetSpeed,
-                "gObsWheelSpeedLeft", &gObsWheelSpeed[LEFT],
-                "gObsWheelSpeedRight", &gObsWheelSpeed[RIGHT]);
+                "gObsSpeed", &gObsSpeed,
+                "gObsAngle", &gObsAngle,
+                "gTargetOmega", &gTargetOmega);
         while(loggingIsInitialized() == FALSE){
             vTaskDelay(1 / portTICK_PERIOD_MS);
         }
@@ -264,9 +264,9 @@ void Debug(void){
 
     const float DISTANCE = 0.090;
     const float HALF_DISTANCE = 0.045;
-    const float END_SPEED = 0.3; // m/s
+    const float END_SPEED = 0.2; // m/s
     const float TIME_OUT = 2.0; // sec
-    const float MAX_SPEED = 0.3; // m/s
+    const float MAX_SPEED = 0.2; // m/s
     const float ACCEL = 1.0; // m/ss
     const float KETSU_DISTANCE = 0.003;
     const float KETSU_TIME_OUT = 0.5; // sec
@@ -340,13 +340,12 @@ static void TaskMain(void *arg){
             if(gObsTouch[RIGHT] && gObsTouch[LEFT]){
                 switch(mode){
                 case MODE0_SEARCH:
-                    ESP_LOGI(TAG, "SEARCH");
-                    // searchLefthand();
-                    searchAdachi(2,1,FALSE);
-                    // search_adachi(0,3);
+                    ESP_LOGI(TAG, "SEARCH_SLALOM");
+                    searchAdachi(1,2,TRUE);
                     break;
                 case MODE1_FAST_RUN:
-                    ESP_LOGI(TAG, "FAST_RUN");
+                    ESP_LOGI(TAG, "SEARCH");
+                    searchAdachi(1,2,FALSE);
                     break;
                 case MODE2_CONFIG:
                     ESP_LOGI(TAG, "CONFIG");

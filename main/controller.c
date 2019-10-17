@@ -413,11 +413,11 @@ int turn(const float targetAngle, const float timeout){
 
 int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     // スラロームやりたい
-    const float MAX_OMEGA= 5; // 最大角速度 rad/s
-    const float ACCEL_DECEL = 50; // 加減速度 rad/s^2
+    const float MAX_OMEGA= 4.5; // 最大角速度 rad/s
+    const float ACCEL_DECEL = 25; // 50 加減速度 rad/s^2
     const float OFFSET_DISTANCE = 0.008; // オフセット直線走行距離 meter
-    const float ACCEL_DECEL_ANGLE = 0.436332313; // 加減速角度 rad
-    const float KEEP_OMEGA_ANGLE = 0.6981317008; // 低速角度 rad
+    const float ACCEL_DECEL_ANGLE = 25.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 40.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
 
     control_t control;
     // 直進速度は一定速

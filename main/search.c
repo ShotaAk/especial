@@ -434,8 +434,8 @@ void initMaze(void)
 void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
     //引数goalX,goalYに向かって足立法で迷路を探索する
     const float TIME_OUT = 4.0; // sec
-    const float MAX_SPEED = 0.3; // m/s
-    const float END_SPEED = 0.3; // m/s
+    const float MAX_SPEED = 0.2; // m/s
+    const float END_SPEED = 0.2; // m/s
     const float ACCEL = 1.0; // m/ss
     const float HALF_DISTANCE = 0.045;
     const float DISTANCE = 0.090;
@@ -519,6 +519,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
 
 
     int doHipAdjust = 0; // けつあて補正
+    int toggleBlink = 0; // １区画ごとに点灯と点滅を切り替える
     while((MyPos.x != goalX) || (MyPos.y != goalY)){ // ゴールするまで繰り返す
 
         setWall(MyPos.x,MyPos.y); // 壁をセット
@@ -527,10 +528,12 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
         switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir)) 
         {
             case LOCAL_FRONT:
+                gIndicatorValue = 3 + 6*toggleBlink; // デバッグ用のLED点灯
                 result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                 break;
 
             case LOCAL_RIGHT:
+                gIndicatorValue = 1 + 6*toggleBlink; // デバッグ用のLED点灯
                 if(slalomEnable){
                     slalom(TRUE, END_SPEED, TIME_OUT);
                 }else{
@@ -557,6 +560,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                 break;
 
             case LOCAL_LEFT:
+                gIndicatorValue = 2 + 6*toggleBlink; // デバッグ用のLED点灯
                 if(slalomEnable){
                     slalom(FALSE, END_SPEED, TIME_OUT);
                 }else{
@@ -582,6 +586,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                 break;
 
             case LOCAL_REAR:
+                gIndicatorValue = 6; // デバッグ用のLED点灯
                 if(gObsIsWall[DIREC_FRONT] == 1){
                     // 前に壁があればけつあて
                     doHipAdjust = 1;
@@ -623,6 +628,13 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
             case west:
                 MyPos.x--; // 西を向いたときはX座標を減らす
                 break;
+        }
+
+        // LEDの点灯と点滅を切り替える
+        if(toggleBlink==0){
+            toggleBlink=1;
+        }else{
+            toggleBlink=0;
         }
     }
 
