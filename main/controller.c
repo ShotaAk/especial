@@ -413,11 +413,12 @@ int turn(const float targetAngle, const float timeout){
 
 int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     // スラロームやりたい
-    const float MAX_OMEGA= 4.5; // 最大角速度 rad/s
-    const float ACCEL_DECEL = 25; // 50 加減速度 rad/s^2
-    const float OFFSET_DISTANCE = 0.008; // オフセット直線走行距離 meter
-    const float ACCEL_DECEL_ANGLE = 25.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
-    const float KEEP_OMEGA_ANGLE  = 40.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+    const float MAX_OMEGA= 8; // 最大角速度 rad/s
+    const float ACCEL_DECEL = 100; // 50 加減速度 rad/s^2
+    const float START_OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
+    const float STOP_OFFSET_DISTANCE = 0.018; // オフセット直線走行距離 meter
+    const float ACCEL_DECEL_ANGLE = 15.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 55.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
 
     control_t control;
     // 直進速度は一定速
@@ -446,7 +447,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     gObsMovingDistance = 0; // 移動距離を初期化
     while(1){
         // 走行距離がオフセット距離を超えたらループを抜ける
-        if(gObsMovingDistance > OFFSET_DISTANCE){
+        if(gObsMovingDistance > START_OFFSET_DISTANCE){
             break;
         }
 
@@ -526,7 +527,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     gObsMovingDistance = 0; // 移動距離を初期化
     while(1){
         // 走行距離がオフセット距離を超えたらループを抜ける
-        if(gObsMovingDistance > OFFSET_DISTANCE){
+        if(gObsMovingDistance > STOP_OFFSET_DISTANCE){
             break;
         }
 

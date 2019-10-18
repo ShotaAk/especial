@@ -465,11 +465,14 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
 
     // けつあて
     result = straightBack(KETSU_TIME_OUT);
+    gMotorState = MOTOR_OFF;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     // ジャイロのバイアスリセット
     gGyroBiasResetRequest = 1;
     while(gGyroBiasResetRequest){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
+    gMotorState = MOTOR_ON;
     result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 
     switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir)) // 次に行く方向を戻り値とする関数を呼ぶ
@@ -547,11 +550,14 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                     if(doHipAdjust){
                         // けつあて
                         result = straightBack(KETSU_TIME_OUT);
+                        gMotorState = MOTOR_OFF;
+                        vTaskDelay(500 / portTICK_PERIOD_MS);
                         // ジャイロのバイアスリセット
                         gGyroBiasResetRequest = 1;
                         while(gGyroBiasResetRequest){
                             vTaskDelay(1 / portTICK_PERIOD_MS);
                         }
+                        gMotorState = MOTOR_ON;
                         result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                         doHipAdjust = 0;
                     }
@@ -573,11 +579,14 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                     if(doHipAdjust){
                         // けつあて
                         result = straightBack(KETSU_TIME_OUT);
+                        gMotorState = MOTOR_OFF;
+                        vTaskDelay(500 / portTICK_PERIOD_MS);
                         // ジャイロのバイアスリセット
                         gGyroBiasResetRequest = 1;
                         while(gGyroBiasResetRequest){
                             vTaskDelay(1 / portTICK_PERIOD_MS);
                         }
+                        gMotorState = MOTOR_ON;
                         result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                         doHipAdjust = 0;
                     }
@@ -596,11 +605,14 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                 if(doHipAdjust){
                     // けつあて
                     result = straightBack(KETSU_TIME_OUT);
+                    gMotorState = MOTOR_OFF;
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
                     // ジャイロのバイアスリセット
                     gGyroBiasResetRequest = 1;
                     while(gGyroBiasResetRequest){
                         vTaskDelay(1 / portTICK_PERIOD_MS);
                     }
+                    gMotorState = MOTOR_ON;
                     result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
                     doHipAdjust = 0;
                 }

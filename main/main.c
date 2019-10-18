@@ -249,7 +249,7 @@ void Debug(void){
                 // "gObsMovingDistance", &gObsMovingDistance,
                 // "gTargetSpeed", &gTargetSpeed,
                 // "gObsSpeed", &gObsSpeed);
-                "gObsSpeed", &gObsSpeed,
+                "gGyroZ", &gGyro[AXIS_Z],
                 "gObsAngle", &gObsAngle,
                 "gTargetOmega", &gTargetOmega);
         while(loggingIsInitialized() == FALSE){
@@ -296,11 +296,15 @@ void Debug(void){
 
     // けつあて
     result = straightBack(KETSU_TIME_OUT);
+    gMotorState = MOTOR_OFF;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     // ジャイロのバイアスリセット
     gGyroBiasResetRequest = 1;
     while(gGyroBiasResetRequest){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
+    gMotorState = MOTOR_ON;
+
     result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
 

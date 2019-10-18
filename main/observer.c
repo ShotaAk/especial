@@ -16,7 +16,7 @@
 static const char *TAG="Observer";
 
 static float WALL_THRESHOLD[DIREC_NUM] = {
-    [DIREC_FRONT] = 0.148355 - 0.03, 
+    [DIREC_FRONT] = 0.148355 - 0.04, 
     [DIREC_LEFT]  = 0.213455 - 0.03, 
     [DIREC_RIGHT] = 0.191652 - 0.03, 
     [DIREC_BACK]  = 0.5}; // volts
