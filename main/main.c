@@ -418,7 +418,7 @@ void app_main()
             // xTaskCreate(TaskControlMotion, "TaskControlMotion", 4096, NULL, 5, NULL);
             gIndicatorValue = 9; // LED点灯
 
-            vTaskDelay(500 / portTICK_PERIOD_MS);
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
             xTaskCreate(TaskMain, "TaskMain", 4096, NULL, 5, NULL);
 
             // ダイアルを初期化
