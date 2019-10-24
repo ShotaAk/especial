@@ -80,7 +80,6 @@ const unsigned char INIT_STEPS = 255;
 const unsigned char MIN_STEP = 0;
 static t_steps StepMap[MAZESIZE_X][MAZESIZE_Y]; // 歩数マップ
 static t_wall WallMap[MAZESIZE_X][MAZESIZE_Y];
-static t_position MyPos;
 
 void initialzeStepMap(int goalX, int goalY)
 {
@@ -195,7 +194,7 @@ int isUnknown(int x, int y)
     }
 }
 
-t_priority getPriority(int x, int y, t_direction dir)
+t_priority getPriority(int x, int y, t_direction dir, const t_position *mypos)
 {
     // 座標x,yと、向いている方角dirから優先度を算出する
 
@@ -205,11 +204,11 @@ t_priority getPriority(int x, int y, t_direction dir)
 
     t_priority priority = PRIORITY_LOWEST;
 
-    if(MyPos.dir == dir) // 行きたい方向が現在の進行方向と同じ場合
+    if(mypos->dir == dir) // 行きたい方向が現在の進行方向と同じ場合
     {
         priority = PRIORITY_MID;
     }
-    else if( ((4+MyPos.dir-dir)%4) == 2) // 行きたい方向が現在の進行方向と逆の場合
+    else if( ((4+mypos->dir-dir)%4) == 2) // 行きたい方向が現在の進行方向と逆の場合
     {
         priority = PRIORITY_LOWEST;
     }
@@ -227,7 +226,8 @@ t_priority getPriority(int x, int y, t_direction dir)
     return priority; // 優先度を返す
 }
 
-t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t_direction *dir)
+t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t_direction *dir,
+        const t_position *mypos)
 {
     // ゴール座標に向かう場合、今どちらに行くべきかを判断する。
     // 探索、最短の切り替えのためのmaskを指定、dirは方角を示す
@@ -242,13 +242,13 @@ t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t
 
     // TODO:ここは同じことを４回書いてるので、もっとシンプルにできる
 
-    if( (WallMap[MyPos.x][MyPos.y].north & mask) == NOWALL) // 北に壁がなければ
+    if( (WallMap[mypos->x][mypos->y].north & mask) == NOWALL) // 北に壁がなければ
     {
         // 1区画先の歩数と優先度を取得
-        int nextX = MyPos.x;
-        int nextY = MyPos.y+1;
+        int nextX = mypos->x;
+        int nextY = mypos->y+1;
         t_steps nextSteps = StepMap[nextX][nextY];
-        tmp_priority = getPriority(nextX, nextY, north);
+        tmp_priority = getPriority(nextX, nextY, north, mypos);
 
         if(nextSteps < lowestSteps) // 一番歩数が小さい方向を見つける
         {
@@ -266,13 +266,13 @@ t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t
         }
     }
 
-    if( (WallMap[MyPos.x][MyPos.y].east & mask) == NOWALL) // 東に壁がなければ
+    if( (WallMap[mypos->x][mypos->y].east & mask) == NOWALL) // 東に壁がなければ
     {
         // 1区画先の歩数と優先度を取得
-        int nextX = MyPos.x+1;
-        int nextY = MyPos.y;
+        int nextX = mypos->x+1;
+        int nextY = mypos->y;
         t_steps nextSteps = StepMap[nextX][nextY];
-        tmp_priority = getPriority(nextX, nextY, east);
+        tmp_priority = getPriority(nextX, nextY, east, mypos);
 
         if(nextSteps < lowestSteps) // 一番歩数が小さい方向を見つける
         {
@@ -290,13 +290,13 @@ t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t
         }
     }
 
-    if( (WallMap[MyPos.x][MyPos.y].south & mask) == NOWALL) // 南に壁がなければ
+    if( (WallMap[mypos->x][mypos->y].south & mask) == NOWALL) // 南に壁がなければ
     {
         // 1区画先の歩数と優先度を取得
-        int nextX = MyPos.x;
-        int nextY = MyPos.y-1;
+        int nextX = mypos->x;
+        int nextY = mypos->y-1;
         t_steps nextSteps = StepMap[nextX][nextY];
-        tmp_priority = getPriority(nextX, nextY, south);
+        tmp_priority = getPriority(nextX, nextY, south, mypos);
 
         if(nextSteps < lowestSteps) // 一番歩数が小さい方向を見つける
         {
@@ -314,13 +314,13 @@ t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t
         }
     }
 
-    if( (WallMap[MyPos.x][MyPos.y].west & mask) == NOWALL) // 西に壁がなければ
+    if( (WallMap[mypos->x][mypos->y].west & mask) == NOWALL) // 西に壁がなければ
     {
         // 1区画先の歩数と優先度を取得
-        int nextX = MyPos.x-1;
-        int nextY = MyPos.y;
+        int nextX = mypos->x-1;
+        int nextY = mypos->y;
         t_steps nextSteps = StepMap[nextX][nextY];
-        tmp_priority = getPriority(nextX, nextY, west);
+        tmp_priority = getPriority(nextX, nextY, west, mypos);
 
         if(nextSteps < lowestSteps) // 一番歩数が小さい方向を見つける
         {
@@ -336,17 +336,20 @@ t_local_dir getNextDirection(const int goalX, const int goalY, const int mask, t
     }
 
     // TODO:ここはわかりにくい
-    return ( (int)( ( 4 + *dir - MyPos.dir) % 4 ) ); // どっちに向かうべきかを返す。
+    return ( (int)( ( 4 + *dir - mypos->dir) % 4 ) ); // どっちに向かうべきかを返す。
 }
 
-void setWall(int x, int y)
+void setWall(const t_position *mypos)
 {
-    // 引数の座標x,yに壁情報を書き込む
+    // 自分のいる座標に壁情報を書き込む
     
     int n_write=NOWALL,s_write=NOWALL,e_write=NOWALL,w_write=NOWALL;
 
+    int x = mypos->x;
+    int y = mypos->y;
+
     // 自分の方向に応じて書き込むデータを生成
-    switch(MyPos.dir){
+    switch(mypos->dir){
         case north:
             n_write = CONV_SEN2WALL(gObsIsWall[DIREC_FRONT]); // 前壁の有無を判断
             e_write = CONV_SEN2WALL(gObsIsWall[DIREC_RIGHT]); // 右壁の有無を判断
@@ -432,25 +435,22 @@ void initMaze(void)
     WallMap[0][0].east = WallMap[1][0].west = WALL; // スタート地点の右の壁を追加する
 }
 
-void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
+void searchAdachi(const int goalX, const int goalY, const int slalomEnable, 
+        const int doInitKetsuate,
+        t_position *mypos){
     //引数goalX,goalYに向かって足立法で迷路を探索する
     float endSpeed = pSEARCH_MAX_SPEED;
 
     t_direction glob_nextdir; // 次に向かう方向を記録する変数
 
-    // パラメータ初期化
-    initMaze();
-    MyPos.x = MyPos.y = 0;
-    MyPos.dir = north;
-
-    gIndicatorValue = 6;
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-    gIndicatorValue = 9;
-
     gMotorState = MOTOR_ON;
-    ketsuate(endSpeed);
 
-    switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir)) // 次に行く方向を戻り値とする関数を呼ぶ
+    // スタート直後のけつあて調整
+    if(doInitKetsuate){
+        ketsuate(endSpeed);
+    }
+
+    switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir,mypos)) // 次に行く方向を戻り値とする関数を呼ぶ
     {
         case LOCAL_FRONT:
 
@@ -473,37 +473,37 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
             break;
     }
 
-    MyPos.dir = glob_nextdir; // 方向を更新
+    mypos->dir = glob_nextdir; // 方向を更新
 
     // 向いた方向によって自分の座標を更新する
-    switch(MyPos.dir)
+    switch(mypos->dir)
     {
         case north:
-            MyPos.y++; // 北を向いた時はY座標を増やす
+            mypos->y++; // 北を向いた時はY座標を増やす
             break;
 
         case east:
-            MyPos.x++; // 東を向いた時はX座標を増やす
+            mypos->x++; // 東を向いた時はX座標を増やす
             break;
 
         case south:
-            MyPos.y--; // 南を向いた時はY座標を減らす
+            mypos->y--; // 南を向いた時はY座標を減らす
             break;
 
         case west:
-            MyPos.x--; // 西を向いたときはX座標を減らす
+            mypos->x--; // 西を向いたときはX座標を減らす
             break;
     }
 
 
     int doHipAdjust = 0; // けつあて補正
     int toggleBlink = 0; // １区画ごとに点灯と点滅を切り替える
-    while((MyPos.x != goalX) || (MyPos.y != goalY)){ // ゴールするまで繰り返す
+    while((mypos->x != goalX) || (mypos->y != goalY)){ // ゴールするまで繰り返す
 
-        setWall(MyPos.x,MyPos.y); // 壁をセット
+        setWall(mypos); // 壁をセット
 
         // 次に行く方向を戻り値とする関数を呼ぶ
-        switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir)) 
+        switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir,mypos)) 
         {
             case LOCAL_FRONT:
                 gIndicatorValue = 3 + 6*toggleBlink; // デバッグ用のLED点灯
@@ -564,25 +564,25 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
                 break;
         }
 
-        MyPos.dir = glob_nextdir; // 方向を更新
+        mypos->dir = glob_nextdir; // 方向を更新
 
         // 向いた方向によって自分の座標を更新する
-        switch(MyPos.dir)
+        switch(mypos->dir)
         {
             case north:
-                MyPos.y++; // 北を向いた時はY座標を増やす
+                mypos->y++; // 北を向いた時はY座標を増やす
                 break;
 
             case east:
-                MyPos.x++; // 東を向いた時はX座標を増やす
+                mypos->x++; // 東を向いた時はX座標を増やす
                 break;
 
             case south:
-                MyPos.y--; // 南を向いた時はY座標を減らす
+                mypos->y--; // 南を向いた時はY座標を減らす
                 break;
 
             case west:
-                MyPos.x--; // 西を向いたときはX座標を減らす
+                mypos->x--; // 西を向いたときはX座標を減らす
                 break;
         }
 
@@ -594,7 +594,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
         }
     }
 
-    setWall(MyPos.x,MyPos.y); // 壁をセット
+    setWall(mypos); // 壁をセット
     searchStraight(pHALF_CELL_DISTANCE, 0.0);
     // straight(HALF_SECTION,SEARCH_ACCEL,SEARCH_SPEED,0);	
     // 制御終了状態
@@ -612,3 +612,34 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable){
 }
 
 
+void search(const int goalX, const int goalY, const int slalomEnable, 
+        const int goHomeEnable){
+
+    int doInitKetsuate = TRUE;
+    t_position myPos;
+    myPos.x = myPos.y = 0;
+    myPos.dir = north;
+
+    // 迷路を初期化
+    initMaze();
+
+    // LEDを点灯するからこの間に指を離してね
+    gIndicatorValue = 6;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    gIndicatorValue = 9;
+
+    searchAdachi(goalX,goalY,slalomEnable,doInitKetsuate,&myPos);
+
+    // ゴールしたらLEDを点灯
+    gIndicatorValue = 6;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
+    }
+    gIndicatorValue = 0;
+
+    // スタート地点に戻る
+    if(goHomeEnable){
+        doInitKetsuate = FALSE;
+        searchAdachi(0,0,slalomEnable,doInitKetsuate,&myPos);
+    }
+}
