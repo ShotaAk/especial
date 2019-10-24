@@ -25,7 +25,7 @@
 #include "controller.h"
 #include "observer.h"
 #include "logger.h"
-#include "search.h"
+#include "maze.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"

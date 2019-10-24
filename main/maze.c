@@ -6,6 +6,7 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 
+#include "maze.h"
 #include "observer.h"
 #include "variables.h"
 #include "parameters.h"
@@ -13,7 +14,7 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
-static const char *TAG="Search";
+static const char *TAG="Maze";
 
 /*
  * Wall Status Bits: [00] -> [isKnown isWall]
