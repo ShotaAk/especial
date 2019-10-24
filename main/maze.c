@@ -614,9 +614,6 @@ void search(const int goalX, const int goalY, const int slalomEnable,
     myPos.x = myPos.y = 0;
     myPos.dir = north;
 
-    // 迷路を初期化
-    initMaze();
-
     // LEDを点灯するからこの間に指を離してね
     gIndicatorValue = 6;
     vTaskDelay(3000 / portTICK_PERIOD_MS);

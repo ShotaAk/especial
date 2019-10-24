@@ -358,6 +358,9 @@ void Debug(void){
 static void TaskMain(void *arg){
     static const char *TAG="Main";
 
+    // 迷路初期化
+    initMaze();
+
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gCurrentMode == MODE_SELECT){
