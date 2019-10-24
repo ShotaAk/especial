@@ -601,14 +601,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable,
     gMotorDuty[RIGHT] = 0;
     gMotorDuty[LEFT] = 0;
 
-    gIndicatorValue = 9;
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-
     gMotorState = MOTOR_OFF;
-    gIndicatorValue = 0;
-
-    // ダイアルを初期化
-    gObsDial = 0;
 }
 
 
@@ -632,8 +625,9 @@ void search(const int goalX, const int goalY, const int slalomEnable,
 
     // ゴールしたらLEDを点灯
     gIndicatorValue = 6;
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     while(gGyroBiasResetRequest){
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
     gIndicatorValue = 0;
 
@@ -642,4 +636,12 @@ void search(const int goalX, const int goalY, const int slalomEnable,
         doInitKetsuate = FALSE;
         searchAdachi(0,0,slalomEnable,doInitKetsuate,&myPos);
     }
+
+    // LEDを点灯するからこの間にEspecialを持ち上げてね
+    gIndicatorValue = 9;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gIndicatorValue = 0;
+
+    // ダイアルを初期化
+    gObsDial = 0;
 }
