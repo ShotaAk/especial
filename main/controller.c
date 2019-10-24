@@ -614,3 +614,32 @@ void stop(const int times){
     }
 }
 
+
+int searchStraight(const float distance, const float endSpeed){
+    // 予めパラメータをセットした探索走行関数
+    // コードを綺麗にするために作成した
+    return straight(distance, endSpeed, pSEARCH_TIMEOUT, 
+            pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+}
+
+int ketsuate(const float endSpeed){
+    // 予めパラメータをセットしたけつあて関数
+    // コードを綺麗にするために作成した
+    int result;
+
+    result = straightBack(pKETSU_TIMEOUT);
+    // 振動を防ぐためモータをOFF
+    gMotorState = MOTOR_OFF;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    // ジャイロのバイアスリセット
+    gGyroBiasResetRequest = 1;
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    gMotorState = MOTOR_ON;
+    result = straight(pKETSU_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+            pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+    return result;
+}
+
+
