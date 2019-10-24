@@ -444,6 +444,9 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable,
 
     t_direction glob_nextdir; // 次に向かう方向を記録する変数
 
+    // 移動距離を初期化
+    gObsMovingDistance = 0;
+
     gMotorState = MOTOR_ON;
 
     // スタート直後のけつあて調整

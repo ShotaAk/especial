@@ -272,15 +272,14 @@ void Debug(void){
 
     // ------------16区画直進---------
     {
-        // float endSpeed = pSEARCH_MAX_SPEED;
-        // straight(pHALF_CELL_DISTANCE, endSpeed, 
-        //         pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
-        // for(int i=0; i<2; i++){
-        //     straight(pCELL_DISTANCE, endSpeed, 
-        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
-        // }
-        // straight(pHALF_CELL_DISTANCE, 0.0, 
-        //         pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        float endSpeed = pSEARCH_MAX_SPEED;
+        // 移動距離を初期化
+        gObsMovingDistance = 0;
+        searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        for(int i=0; i<14; i++){
+            searchStraight(pCELL_DISTANCE, endSpeed);
+        }
+        searchStraight(pHALF_CELL_DISTANCE, 0.0);
     }
 
     // -------16区画直進を１つの関数で--------
@@ -293,19 +292,19 @@ void Debug(void){
 
     // 外周をグルって回るやつ
     {
-        float endSpeed = pSEARCH_MAX_SPEED;
-        ketsuate(endSpeed);
-        searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        for(int i=0; i<20; i++){
-            searchStraight(pCELL_DISTANCE, endSpeed);
-            searchStraight(pCELL_DISTANCE, endSpeed);
-            // スラローム
-            slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
-            // 超信地旋回
-            // searchStraight(pHALF_CELL_DISTANCE, 0.0);
-            // turn(-M_PI_2, pSEARCH_TIMEOUT);
-            // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        }
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // ketsuate(endSpeed);
+        // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        // for(int i=0; i<20; i++){
+        //     searchStraight(pCELL_DISTANCE, endSpeed);
+        //     searchStraight(pCELL_DISTANCE, endSpeed);
+        //     // スラローム
+        //     slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
+        //     // 超信地旋回
+        //     // searchStraight(pHALF_CELL_DISTANCE, 0.0);
+        //     // turn(-M_PI_2, pSEARCH_TIMEOUT);
+        //     // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        // }
     }
 
 
@@ -366,8 +365,8 @@ static void TaskMain(void *arg){
         if(gCurrentMode == MODE_SELECT){
             // モード選択
             int mode = gObsDial;
-            int goalX = 1;
-            int goalY = 2;
+            int goalX = 6;
+            int goalY = 9;
             // タッチセンサでモードを確定する
             if(gObsTouch[RIGHT] && gObsTouch[LEFT]){
                 switch(mode){

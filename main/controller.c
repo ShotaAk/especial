@@ -211,7 +211,7 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     }
 
     // 移動距離を初期化
-    gObsMovingDistance = 0;
+    // gObsMovingDistance = 0;
 
     // 時間計測開始
     clock_t startTime = clock();
@@ -220,11 +220,15 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
     control.accelSpeed = ACCEL;
     while(1){
         // 目標位置までの残り移動距離
+        // endSpeedとTargetSpeedが等しい場合は、この条件分岐で関数を抜ける
         // TODO:逆走機能を設ける
         float remainingDistance = targetDistance - gObsMovingDistance;
         if(remainingDistance < 0){
-            ESP_LOGE(TAG, "targetDistance < gObsMovingDistance");
-            return FALSE;
+            // 移動距離を初期化
+            // 関数の終了時に初期化することで、
+            // 関数外の処理中に進んだ距離を計測できる
+            gObsMovingDistance = 0;
+            return TRUE;
         }
         // 目標最終速度までの残り速度
         float remainingSpeed = TargetSpeed - endSpeed;
@@ -304,6 +308,11 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
             }
         }
     }
+
+    // 移動距離を初期化
+    // 関数の終了時に初期化することで、
+    // 関数外の処理中に進んだ距離を計測できる
+    gObsMovingDistance = 0;
 
     return TRUE;
 }
@@ -408,6 +417,11 @@ int turn(const float targetAngle, const float timeout){
         }
     }
 
+    // 移動距離を初期化
+    // 関数の終了時に初期化することで、
+    // 関数外の処理中に進んだ距離を計測できる
+    gObsMovingDistance = 0;
+
     return TRUE;
 }
 
@@ -444,7 +458,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     clock_t startTime = clock();
 
     // オフセット距離を走行
-    gObsMovingDistance = 0; // 移動距離を初期化
+    // gObsMovingDistance = 0; // 移動距離を初期化
     while(1){
         // 走行距離がオフセット距離を超えたらループを抜ける
         if(gObsMovingDistance > START_OFFSET_DISTANCE){
@@ -542,6 +556,11 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
         }
     }
 
+    // 移動距離を初期化
+    // 関数の終了時に初期化することで、
+    // 関数外の処理中に進んだ距離を計測できる
+    gObsMovingDistance = 0;
+
     return TRUE;
 }
 
@@ -561,7 +580,7 @@ int straightBack(const float timeout){
     control.enableWallControl = 0;
 
     // 移動距離を初期化
-    gObsMovingDistance = 0;
+    // gObsMovingDistance = 0;
 
     // 時間計測開始
     clock_t startTime = clock();
@@ -591,6 +610,11 @@ int straightBack(const float timeout){
     // 制御器の更新
     updateController(&control);
     vTaskDelay(1 / portTICK_PERIOD_MS);
+
+    // 移動距離を初期化
+    // 関数の終了時に初期化することで、
+    // 関数外の処理中に進んだ距離を計測できる
+    gObsMovingDistance = 0;
 
     return TRUE;
 }
