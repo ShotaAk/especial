@@ -52,31 +52,35 @@ enum MODE{
     MODE_SELECT
 };
 
+// -----Especialのモード-----
 extern enum MODE gCurrentMode;
 
+// -----モーションセンサ値-----
 extern float gAccel[AXIS_NUM]; // g (9.806 m/s^2)
 extern float gGyro[AXIS_NUM]; // radians/sec
 extern int gGyroBiasResetRequest; // 0 or 1
 
+// -----エンコーダ値-----
 extern float gWheelAngle[SIDE_NUM]; // radians
-extern float gMeasuredSpeed; // m/s
-extern float gMeasuredAngle; // radians
 
+// -----バッテリー電圧値-----
 extern float gBatteryVoltage; // volts
 
+// -----LED点灯パターン-----
 extern int gIndicatorValue; // 0 ~ 3
 
+// -----モータON/OFFとデューティ-----
 extern enum MOTOR_STATE gMotorState;
 extern float gMotorDuty[SIDE_NUM]; // -100 ~ +100 %
 
+// -----オブジェクトセンサ値-----
 extern float gObjVoltages[OBJ_SENS_NUM]; // volts
-extern int gIsWall[DIREC_NUM];
 
-extern float gMovingDistance; // meters
-
+// -----制御目標値-----
 extern float gTargetSpeed; // m/s
 extern float gTargetOmega; // rad/s
 
+// -----センサ情報をもとに生成した観測値-----
 extern int gObsBatteryIsLow; // 0 or 1
 extern int gObsTouch[SIDE_NUM]; // 0 or 1
 extern float gObsMovingDistance; // meters
@@ -88,9 +92,11 @@ extern int gObsIsWall[DIREC_NUM]; // 0 or 1
 extern float gObsWallThresholds[DIREC_NUM];
 extern float gObsWallError[SIDE_NUM];
 
+// -----ログデータ-----
 extern float gLogData[LOG_DATA_NUM][LOG_INDEX_NUM];
 extern int gLogTime[LOG_INDEX_NUM];
 
+// -----デバッグ用の変数-----
 extern float gDebugValue;
 
 #endif
