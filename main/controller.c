@@ -432,7 +432,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     const float START_OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
     const float STOP_OFFSET_DISTANCE = 0.018; // オフセット直線走行距離 meter
     const float ACCEL_DECEL_ANGLE = 15.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
-    const float KEEP_OMEGA_ANGLE  = 57.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 56.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
 
     control_t control;
     // 直進速度は一定速

@@ -272,14 +272,14 @@ void Debug(void){
 
     // ------------16区画直進---------
     {
-        float endSpeed = pSEARCH_MAX_SPEED;
-        // 移動距離を初期化
-        gObsMovingDistance = 0;
-        searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        for(int i=0; i<14; i++){
-            searchStraight(pCELL_DISTANCE, endSpeed);
-        }
-        searchStraight(pHALF_CELL_DISTANCE, 0.0);
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // // 移動距離を初期化
+        // gObsMovingDistance = 0;
+        // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        // for(int i=0; i<14; i++){
+        //     searchStraight(pCELL_DISTANCE, endSpeed);
+        // }
+        // searchStraight(pHALF_CELL_DISTANCE, 0.0);
     }
 
     // -------16区画直進を１つの関数で--------
@@ -292,19 +292,21 @@ void Debug(void){
 
     // 外周をグルって回るやつ
     {
-        // float endSpeed = pSEARCH_MAX_SPEED;
-        // ketsuate(endSpeed);
-        // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        // for(int i=0; i<20; i++){
-        //     searchStraight(pCELL_DISTANCE, endSpeed);
-        //     searchStraight(pCELL_DISTANCE, endSpeed);
-        //     // スラローム
-        //     slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
-        //     // 超信地旋回
-        //     // searchStraight(pHALF_CELL_DISTANCE, 0.0);
-        //     // turn(-M_PI_2, pSEARCH_TIMEOUT);
-        //     // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        // }
+        float endSpeed = pSEARCH_MAX_SPEED;
+        // 移動距離を初期化
+        gObsMovingDistance = 0;
+        ketsuate(endSpeed);
+        searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        for(int i=0; i<8; i++){
+            // スラローム
+            searchStraight(pCELL_DISTANCE, endSpeed);
+            slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
+            // 超信地旋回
+            // searchStraight(pHALF_CELL_DISTANCE, 0.0);
+            // turn(-M_PI_2, pSEARCH_TIMEOUT);
+            // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        }
+        searchStraight(pHALF_CELL_DISTANCE, 0.0);
     }
 
 
