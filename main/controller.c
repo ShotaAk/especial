@@ -312,10 +312,10 @@ int straight(const float targetDistance, const float endSpeed, const float timeo
 int turn(const float targetAngle, const float timeout){
     // 到達角度で速度が0になる超信地旋回
     // 台形制御
-    const float MAX_OMEGA= M_PI; // rad/s
+    const float MAX_OMEGA= 8; // rad/s
     const float MIN_OMEGA= M_PI*0.3; // rad/s
-    const float ACCEL = M_PI*2.5; // rad/s^2
-    const float DECEL = -M_PI*2.5; // rad/s^2
+    const float ACCEL = 100; // rad/s^2
+    const float DECEL = -100; // rad/s^2
 
     const float END_OMEGA = 0; // 終端角速度を0 rad/s固定にする
 
@@ -418,7 +418,7 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     const float START_OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
     const float STOP_OFFSET_DISTANCE = 0.018; // オフセット直線走行距離 meter
     const float ACCEL_DECEL_ANGLE = 15.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
-    const float KEEP_OMEGA_ANGLE  = 55.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 57.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
 
     control_t control;
     // 直進速度は一定速

@@ -294,25 +294,30 @@ void Debug(void){
     //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
     // }
 
+
+    result = turn(M_PI_2, TIME_OUT);
+
+
     // けつあて
-    result = straightBack(KETSU_TIME_OUT);
-    gMotorState = MOTOR_OFF;
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    // ジャイロのバイアスリセット
-    gGyroBiasResetRequest = 1;
-    while(gGyroBiasResetRequest){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
-    gMotorState = MOTOR_ON;
-
-    result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-
-    // スラローム
-    gIndicatorValue = 3;
-    slalom(0, END_SPEED, TIME_OUT);
-    gIndicatorValue = 0;
-    straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // result = straightBack(KETSU_TIME_OUT);
+    // gMotorState = MOTOR_OFF;
+    // vTaskDelay(500 / portTICK_PERIOD_MS);
+    // // ジャイロのバイアスリセット
+    // gGyroBiasResetRequest = 1;
+    // while(gGyroBiasResetRequest){
+    //     vTaskDelay(1 / portTICK_PERIOD_MS);
+    // }
+    // gMotorState = MOTOR_ON;
+    //
+    // result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    //
+    // // スラローム
+    // gIndicatorValue = 3;
+    // slalom(0, END_SPEED, TIME_OUT);
+    // gIndicatorValue = 0;
+    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    
 
     gMotorState = MOTOR_OFF;
     // --------------ロガーの設定-------------
