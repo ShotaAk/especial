@@ -1,10 +1,24 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const float TIRE_DIAMETER;
-const float pTIRE_RADIUS;
+// Especialのボディ情報
+const float pTIRE_DIAMETER; // meters
+const float pTIRE_RADIUS; // meters
 
-const float pLOW_BATTERY_VOLTAGE;
+// 低電圧検知用の電圧値。下回ると低電圧。
+const float pLOW_BATTERY_VOLTAGE; // volts
 
+// 区画のサイズ
+const float pCELL_DISTANCE; // meters
+const float pHALF_CELL_DISTANCE; // meters
+
+// 探索走行用パラメータ
+const float pSEARCH_MAX_SPEED; // m/s
+const float pSEARCH_TIMEOUT; // sec
+const float pSEARCH_ACCEL; // m/ss
+
+// けつ当て用のパラメータ
+const float pKETSU_DISTANCE; // m/s
+const float pKETSU_TIMEOUT; // sec
 
 #endif

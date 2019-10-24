@@ -71,14 +71,7 @@ static void motorTest(void){
 }
 
 void searchLefthand(void){
-    const float TIME_OUT = 4.0; // sec
-    const float MAX_SPEED = 0.3; // m/s
-    const float ACCEL = 1.0; // m/ss
-    const float HALF_DISTANCE = 0.045;
-    const float DISTANCE = 0.090;
-    const float KETSU_DISTANCE = 0.003;
-    const float KETSU_TIME_OUT = 0.5; // sec
-    int result = TRUE;
+    float endSpeed = pSEARCH_MAX_SPEED;
 
     gIndicatorValue = 6;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
@@ -93,7 +86,8 @@ void searchLefthand(void){
 
     gMotorState = MOTOR_ON;
     //半区画進む
-    result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+    straight(pHALF_CELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+            pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
 
     int doHipAdjust = 0; // けつあて補正
     while(1){
@@ -107,25 +101,30 @@ void searchLefthand(void){
             }
 
             gIndicatorValue = 2;
-            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-            result = turn(M_PI_2, TIME_OUT);
+            straight(pHALF_CELL_DISTANCE, 0.0, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+            turn(M_PI_2, pSEARCH_TIMEOUT);
 
             if(doHipAdjust){
                 // けつあて
-                result = straightBack(KETSU_TIME_OUT);
+                straightBack(pKETSU_TIMEOUT);
                 // ジャイロのバイアスリセット
                 gGyroBiasResetRequest = 1;
                 while(gGyroBiasResetRequest){
                     vTaskDelay(1 / portTICK_PERIOD_MS);
                 }
-                result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                straight(pKETSU_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                        pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
                 doHipAdjust = 0;
             }
-            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+            straight(pHALF_CELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+
         }else if(gObsIsWall[DIREC_FRONT] != 1){
             // 前に壁がなければ前に進む
             gIndicatorValue = 3;
-            result = straight(DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+            straight(pCELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
 
         }else if(gObsIsWall[DIREC_RIGHT] != 1){
             // 右に壁がなければ右に進む
@@ -134,37 +133,43 @@ void searchLefthand(void){
                 doHipAdjust = 1;
             }
             gIndicatorValue = 1;
-            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-            result = turn(-M_PI_2, TIME_OUT);
+            straight(pHALF_CELL_DISTANCE, 0.0, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+            turn(-M_PI_2, pSEARCH_TIMEOUT);
 
             if(doHipAdjust){
                 // けつあて
-                result = straightBack(KETSU_TIME_OUT);
+                straightBack(pKETSU_TIMEOUT);
                 // ジャイロのバイアスリセット
                 gGyroBiasResetRequest = 1;
                 while(gGyroBiasResetRequest){
                     vTaskDelay(1 / portTICK_PERIOD_MS);
                 }
-                result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+                straight(pKETSU_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                        pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
                 doHipAdjust = 0;
             }
-            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+            straight(pHALF_CELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
 
         }else{
             // それ以外の場合は後ろに進む
             gIndicatorValue = 6;
-            result = straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-            result = turn(M_PI, TIME_OUT);
+            straight(pHALF_CELL_DISTANCE, 0.0, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+            turn(M_PI, pSEARCH_TIMEOUT);
             // けつあて
-            result = straightBack(KETSU_TIME_OUT);
+            straightBack(pKETSU_TIMEOUT);
             // ジャイロのバイアスリセット
             gGyroBiasResetRequest = 1;
             while(gGyroBiasResetRequest){
                 vTaskDelay(1 / portTICK_PERIOD_MS);
             }
-            result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+            straight(pKETSU_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
 
-            result = straight(HALF_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
+            straight(pHALF_CELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+                    pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
         }
     }
 
@@ -262,61 +267,75 @@ void Debug(void){
     }
     // --------------------------------------
 
-    const float DISTANCE = 0.090;
-    const float HALF_DISTANCE = 0.045;
-    const float END_SPEED = 0.2; // m/s
-    const float TIME_OUT = 2.0; // sec
-    const float MAX_SPEED = 0.2; // m/s
-    const float ACCEL = 1.0; // m/ss
-    const float KETSU_DISTANCE = 0.003;
-    const float KETSU_TIME_OUT = 0.5; // sec
-
     gMotorState = MOTOR_ON;
     int result;
 
-    // 16区画直進
-    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // for(int i=0; i<2; i++){
-    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // }
-    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-    
-    // 16区画直進を１つの関数で
-    // straight(DISTANCE*3.0, 0.0, 10.0, MAX_SPEED, ACCEL);
+    // ------------16区画直進---------
+    {
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // straight(pHALF_CELL_DISTANCE, endSpeed, 
+        //         pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        // for(int i=0; i<2; i++){
+        //     straight(pCELL_DISTANCE, endSpeed, 
+        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        // }
+        // straight(pHALF_CELL_DISTANCE, 0.0, 
+        //         pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+    }
 
-    // // 外周をグルって回るやつ
-    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // for(int i=0; i<4; i++){
-    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    //     straight(DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    //     straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
-    //     turn(-M_PI_2, TIME_OUT);
-    //     straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // }
+    // -------16区画直進を１つの関数で--------
+    {
+        // float endSpeed = 0.0;
+        // float timeout = 10.0;
+        // straight(pCELL_DISTANCE*3.0, endSpeed, timeout, 
+        //         pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+    }
+
+    // 外周をグルって回るやつ
+    {
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // straight(pHALF_CELL_DISTANCE, endSpeed, 
+        //         pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        // for(int i=0; i<4; i++){
+        //     straight(pCELL_DISTANCE, endSpeed, 
+        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        //     straight(pCELL_DISTANCE, endSpeed, 
+        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        //     straight(pHALF_CELL_DISTANCE, 0.0, 
+        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        //     turn(-M_PI_2, pSEARCH_TIMEOUT);
+        //     straight(pHALF_CELL_DISTANCE, endSpeed, 
+        //             pSEARCH_TIMEOUT, pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        // }
+    }
 
 
-    result = turn(M_PI_2, TIME_OUT);
-
-
-    // けつあて
-    // result = straightBack(KETSU_TIME_OUT);
-    // gMotorState = MOTOR_OFF;
-    // vTaskDelay(500 / portTICK_PERIOD_MS);
-    // // ジャイロのバイアスリセット
-    // gGyroBiasResetRequest = 1;
-    // while(gGyroBiasResetRequest){
-    //     vTaskDelay(1 / portTICK_PERIOD_MS);
-    // }
-    // gMotorState = MOTOR_ON;
-    //
-    // result = straight(KETSU_DISTANCE, MAX_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    // straight(HALF_DISTANCE, END_SPEED, TIME_OUT, MAX_SPEED, ACCEL);
-    //
-    // // スラローム
-    // gIndicatorValue = 3;
-    // slalom(0, END_SPEED, TIME_OUT);
-    // gIndicatorValue = 0;
-    // straight(HALF_DISTANCE, 0.0, TIME_OUT, MAX_SPEED, ACCEL);
+    // ---------------けつあてとスラロームで３区画すすむ---------
+    {
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // // けつあて
+        // result = straightBack(pKETSU_TIMEOUT);
+        // gMotorState = MOTOR_OFF;
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // // ジャイロのバイアスリセット
+        // gGyroBiasResetRequest = 1;
+        // while(gGyroBiasResetRequest){
+        //     vTaskDelay(1 / portTICK_PERIOD_MS);
+        // }
+        // gMotorState = MOTOR_ON;
+        //
+        // straight(pKETSU_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+        //         pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        // straight(pHALF_CELL_DISTANCE, endSpeed, pSEARCH_TIMEOUT, 
+        //         pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+        //
+        // // スラローム
+        // gIndicatorValue = 3;
+        // slalom(0, endSpeed, pSEARCH_TIMEOUT);
+        // gIndicatorValue = 0;
+        // straight(pHALF_CELL_DISTANCE, 0.0, pSEARCH_TIMEOUT, 
+        //         pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
+    }
     
 
     gMotorState = MOTOR_OFF;
