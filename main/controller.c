@@ -146,12 +146,23 @@ void updateController(control_t *control){
     // 壁制御のフィードバック
     if(control->enableWallControl){
         // 左右に壁があるときのみ、壁制御を実施する
-        if(gObsIsWall[DIREC_RIGHT] && gObsIsWall[DIREC_LEFT]){
-            float wallError = gObsWallError[RIGHT] - gObsWallError[LEFT];
-            float voltageWallFB = wallError * OMEGA_WALL_GAIN;
-            MotorVoltage[RIGHT] += voltageWallFB;
-            MotorVoltage[LEFT]  -= voltageWallFB;
+        float wallError = 0;
+        if(gObsIsWall[DIREC_RIGHT]){
+            wallError += gObsWallError[RIGHT];
         }
+        if(gObsIsWall[DIREC_LEFT]){
+            wallError -= gObsWallError[LEFT];
+        }
+        // }
+        // if(gObsIsWall[DIREC_RIGHT] && gObsIsWall[DIREC_LEFT]){
+        //     float wallError = gObsWallError[RIGHT] - gObsWallError[LEFT];
+        //     float voltageWallFB = wallError * OMEGA_WALL_GAIN;
+        //     MotorVoltage[RIGHT] += voltageWallFB;
+        //     MotorVoltage[LEFT]  -= voltageWallFB;
+        // }
+        float voltageWallFB = wallError * OMEGA_WALL_GAIN;
+        MotorVoltage[RIGHT] += voltageWallFB;
+        MotorVoltage[LEFT]  -= voltageWallFB;
     }
 
     /* -----------------------------------------------------------------------*/
