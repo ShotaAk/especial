@@ -654,7 +654,7 @@ int ketsuate(const float endSpeed){
     result = straightBack(pKETSU_TIMEOUT);
     // 振動を防ぐためモータをOFF
     gMotorState = MOTOR_OFF;
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     // ジャイロのバイアスリセット
     gGyroBiasResetRequest = 1;
     while(gGyroBiasResetRequest){
