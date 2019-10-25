@@ -208,7 +208,7 @@ void TaskReadMotion(void *arg){
     ESP_LOGI(TAG, "Complete initialization.");
     while(1){
         if(gGyroBiasResetRequest){
-            updateBias(spi, 1000);
+            updateBias(spi, 500);
             gGyroBiasResetRequest = 0; // フラグを消して、処理の完了を伝える
         }
 
