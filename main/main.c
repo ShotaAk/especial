@@ -251,11 +251,13 @@ void Debug(void){
     // --------------ロガーの設定-------------
     if(LOGGING_ENABLE){
         loggingInitialize(1, 3000,
+                "gObjVoltagesFR", &gObjVoltages[OBJ_SENS_FR],
+                "gObjVoltagesFL", &gObjVoltages[OBJ_SENS_FL],
                 // "gObsMovingDistance", &gObsMovingDistance,
                 // "gTargetSpeed", &gTargetSpeed,
                 // "gObsSpeed", &gObsSpeed);
-                "gGyroZ", &gGyro[AXIS_Z],
-                "gObsAngle", &gObsAngle,
+                // "gGyroZ", &gGyro[AXIS_Z],
+                // "gObsAngle", &gObsAngle,
                 "gTargetOmega", &gTargetOmega);
         while(loggingIsInitialized() == FALSE){
             vTaskDelay(1 / portTICK_PERIOD_MS);
@@ -270,13 +272,25 @@ void Debug(void){
     gMotorState = MOTOR_ON;
     int result;
 
+    while(1){
+        ESP_LOGI(TAG, "volt L,R,FL,FR:\t%f,\t%f,\t%f\t%f",
+                gObjVoltages[OBJ_SENS_L],
+                gObjVoltages[OBJ_SENS_R],
+                gObjVoltages[OBJ_SENS_FL],
+                gObjVoltages[OBJ_SENS_FR]);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+
+    // -----------時間経過を待つ------
+    // vTaskDelay(3000 / portTICK_PERIOD_MS);
+
     // ------------16区画直進---------
     {
         // float endSpeed = pSEARCH_MAX_SPEED;
         // // 移動距離を初期化
         // gObsMovingDistance = 0;
         // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        // for(int i=0; i<14; i++){
+        // for(int i=0; i<4; i++){
         //     searchStraight(pCELL_DISTANCE, endSpeed);
         // }
         // searchStraight(pHALF_CELL_DISTANCE, 0.0);
@@ -292,21 +306,21 @@ void Debug(void){
 
     // 外周をグルって回るやつ
     {
-        float endSpeed = pSEARCH_MAX_SPEED;
-        // 移動距離を初期化
-        gObsMovingDistance = 0;
-        ketsuate(endSpeed);
-        searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        for(int i=0; i<8; i++){
-            // スラローム
-            searchStraight(pCELL_DISTANCE, endSpeed);
-            slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
-            // 超信地旋回
-            // searchStraight(pHALF_CELL_DISTANCE, 0.0);
-            // turn(-M_PI_2, pSEARCH_TIMEOUT);
-            // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
-        }
-        searchStraight(pHALF_CELL_DISTANCE, 0.0);
+        // float endSpeed = pSEARCH_MAX_SPEED;
+        // // 移動距離を初期化
+        // gObsMovingDistance = 0;
+        // ketsuate(endSpeed);
+        // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        // for(int i=0; i<8; i++){
+        //     // スラローム
+        //     searchStraight(pCELL_DISTANCE, endSpeed);
+        //     slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
+        //     // 超信地旋回
+        //     // searchStraight(pHALF_CELL_DISTANCE, 0.0);
+        //     // turn(-M_PI_2, pSEARCH_TIMEOUT);
+        //     // searchStraight(pHALF_CELL_DISTANCE, endSpeed);
+        // }
+        // searchStraight(pHALF_CELL_DISTANCE, 0.0);
     }
 
 
