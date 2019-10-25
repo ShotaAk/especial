@@ -510,12 +510,12 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable,
         switch(getNextDirection(goalX,goalY,MASK_SEARCH,&glob_nextdir,mypos)) 
         {
             case LOCAL_FRONT:
-                gIndicatorValue = 3 + 6*toggleBlink; // デバッグ用のLED点灯
+                gIndicatorValue = 0 + 3*toggleBlink; // デバッグ用のLED点灯
                 searchStraight(pCELL_DISTANCE, endSpeed);
                 break;
 
             case LOCAL_RIGHT:
-                gIndicatorValue = 1 + 6*toggleBlink; // デバッグ用のLED点灯
+                gIndicatorValue = 0 + 3*toggleBlink; // デバッグ用のLED点灯
                 if(slalomEnable){
                     slalom(TRUE, endSpeed, pSEARCH_TIMEOUT);
                 }else{
@@ -534,7 +534,7 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable,
                 break;
 
             case LOCAL_LEFT:
-                gIndicatorValue = 2 + 6*toggleBlink; // デバッグ用のLED点灯
+                gIndicatorValue = 0 + 3*toggleBlink; // デバッグ用のLED点灯
                 if(slalomEnable){
                     slalom(FALSE, endSpeed, pSEARCH_TIMEOUT);
                 }else{
