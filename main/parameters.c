@@ -2,7 +2,7 @@
 
 // Especialのボディ情報
 // 仕方なくdefineを使用
-#define _TIRE_DIAMETER 0.0135
+#define _TIRE_DIAMETER 0.01355
 const float pTIRE_DIAMETER = _TIRE_DIAMETER; // meters
 const float pTIRE_RADIUS = _TIRE_DIAMETER/2.0; // meters
 
