@@ -15,10 +15,18 @@
 #include "esp_log.h"
 static const char *TAG="Observer";
 
+static float WALL_ERROR_THRESHOLD[SIDE_NUM] = {
+    [RIGHT] = 0.562,
+    [LEFT]  = 0.518,
+};
+
 static float WALL_THRESHOLD[DIREC_NUM] = {
-    [DIREC_FRONT] = 0.148355 - 0.04, 
-    [DIREC_LEFT]  = 0.213455 - 0.03, 
-    [DIREC_RIGHT] = 0.191652 - 0.03, 
+    // [DIREC_FRONT] = 0.148355 - 0.04, 
+    // [DIREC_LEFT]  = 0.213455 - 0.03, 
+    // [DIREC_RIGHT] = 0.191652 - 0.03, 
+    [DIREC_FRONT] = 0.11,
+    [DIREC_LEFT]  = 0.12, 
+    [DIREC_RIGHT] = 0.12, 
     [DIREC_BACK]  = 0.5}; // volts
 
 
@@ -135,8 +143,10 @@ void wallObservation(void){
 
 void wallErrorObservation(void){
     // 壁制御用にエラー値を出力する
-    gObsWallError[RIGHT] = gObjVoltages[OBJ_SENS_R] - WALL_THRESHOLD[DIREC_RIGHT];
-    gObsWallError[LEFT] = gObjVoltages[OBJ_SENS_L] - WALL_THRESHOLD[DIREC_LEFT];
+    // gObsWallError[RIGHT] = gObjVoltages[OBJ_SENS_R] - WALL_THRESHOLD[DIREC_RIGHT];
+    // gObsWallError[LEFT] = gObjVoltages[OBJ_SENS_L] - WALL_THRESHOLD[DIREC_LEFT];
+    gObsWallError[RIGHT] = gObjVoltages[OBJ_SENS_R] - WALL_ERROR_THRESHOLD[RIGHT];
+    gObsWallError[LEFT]  = gObjVoltages[OBJ_SENS_L] - WALL_ERROR_THRESHOLD[LEFT];
 }
 
 void movingDistanceObservation(void){
