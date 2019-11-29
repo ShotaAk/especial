@@ -657,6 +657,13 @@ int searchStraight(const float distance, const float endSpeed){
             pSEARCH_MAX_SPEED, pSEARCH_ACCEL);
 }
 
+int fastStraight(const float distance, const float endSpeed){
+    // 予めパラメータをセットした最短走行関数
+    // コードを綺麗にするために作成した
+    return straight(distance, endSpeed, pFAST_TIMEOUT, 
+            pFAST_MAX_SPEED, pFAST_ACCEL);
+}
+
 int ketsuate(const float endSpeed){
     // 予めパラメータをセットしたけつあて関数
     // コードを綺麗にするために作成した

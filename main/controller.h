@@ -7,6 +7,7 @@ extern int turn(const float targetAngle, const float timeout);
 extern int slalom(const int isTurnRight, const float endSpeed, const float timeout);
 extern int straightBack(const float timeout);
 extern int searchStraight(const float distance, const float endSpeed);
+extern int fastStraight(const float distance, const float endSpeed);
 extern int ketsuate(const float endSpeed);
 
 #endif

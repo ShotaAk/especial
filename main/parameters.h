@@ -17,6 +17,11 @@ const float pSEARCH_MAX_SPEED; // m/s
 const float pSEARCH_TIMEOUT; // sec
 const float pSEARCH_ACCEL; // m/ss
 
+// 最短走行用パラメータ
+const float pFAST_MAX_SPEED; // m/s
+const float pFAST_TIMEOUT; // sec
+const float pFAST_ACCEL; // m/ss
+
 // けつ当て用のパラメータ
 const float pKETSU_DISTANCE; // m/s
 const float pKETSU_TIMEOUT; // sec

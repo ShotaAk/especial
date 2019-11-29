@@ -381,8 +381,8 @@ static void TaskMain(void *arg){
         if(gCurrentMode == MODE_SELECT){
             // モード選択
             int mode = gObsDial;
-            int goalX = 6;
-            int goalY = 9;
+            int goalX = 1;
+            int goalY = 1;
             // タッチセンサでモードを確定する
             if(gObsTouch[RIGHT] && gObsTouch[LEFT]){
                 switch(mode){
@@ -397,9 +397,9 @@ static void TaskMain(void *arg){
                 case MODE1_FAST_RUN:
                 {
                     int slalomEnable = FALSE;
-                    int goHomeEanble = TRUE;
-                    ESP_LOGI(TAG, "SEARCH");
-                    search(goalX, goalY, slalomEnable, goHomeEanble);
+                    int goHomeEanble = FALSE;
+                    ESP_LOGI(TAG, "FAST RUN");
+                    run(goalX, goalY, slalomEnable, goHomeEanble);
                     break;
                 }
                 case MODE2_CONFIG:

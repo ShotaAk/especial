@@ -599,6 +599,133 @@ void searchAdachi(const int goalX, const int goalY, const int slalomEnable,
     gMotorState = MOTOR_OFF;
 }
 
+void fastRun(const int goalX, const int goalY, const int slalomEnable, 
+        const int doInitKetsuate, t_position *mypos){
+
+    //引数goalX,goalYに向かって最短走行する
+    float endSpeed = pFAST_MAX_SPEED;
+
+    t_direction glob_nextdir; // 次に向かう方向を記録する変数
+
+    // 移動距離を初期化
+    gObsMovingDistance = 0;
+
+    gMotorState = MOTOR_ON;
+
+    // スタート直後のけつあて調整
+    if(doInitKetsuate){
+        ketsuate(endSpeed);
+    }
+
+    int straightCount=0; // 直進区画を連続走行するためのカウンタ
+
+    // 現在の向きから、次に行くべき方向を向く
+    switch(getNextDirection(goalX,goalY,MASK_SECOND,&glob_nextdir,mypos)) // 次に行く方向を戻り値とする関数を呼ぶ
+    {
+        case LOCAL_FRONT:
+            // すぐに前進はせず、あとでまとめて前進する
+            straightCount++;
+            break;
+
+        case LOCAL_RIGHT:
+            turn(-M_PI_2, pFAST_TIMEOUT);
+            straightCount = 1;
+            break;
+
+        case LOCAL_LEFT:
+            turn(M_PI_2, pFAST_TIMEOUT);
+            straightCount = 1;
+            break;
+
+        case LOCAL_REAR:
+            turn(M_PI, pFAST_TIMEOUT);
+            straightCount = 1;
+            break;
+    }
+
+    mypos->dir = glob_nextdir; // 方向を更新
+
+    // 向いた方向によって自分の座標を更新する
+    switch(mypos->dir)
+    {
+        case north:
+            mypos->y++; // 北を向いた時はY座標を増やす
+            break;
+
+        case east:
+            mypos->x++; // 東を向いた時はX座標を増やす
+            break;
+
+        case south:
+            mypos->y--; // 南を向いた時はY座標を減らす
+            break;
+
+        case west:
+            mypos->x--; // 西を向いたときはX座標を減らす
+            break;
+    }
+
+    while((mypos->x != goalX) || (mypos->y != goalY)){ // ゴールするまで繰り返す
+
+        // 次に行く方向を戻り値とする関数を呼ぶ
+        switch(getNextDirection(goalX,goalY,MASK_SECOND,&glob_nextdir,mypos)) 
+        {
+            case LOCAL_FRONT:
+                straightCount++;
+                break;
+
+            case LOCAL_RIGHT:
+                if(slalomEnable){
+                    slalom(TRUE, endSpeed, pFAST_TIMEOUT);
+                }else{
+                    fastStraight(pCELL_DISTANCE * straightCount, 0.0);
+                    turn(-M_PI_2, pFAST_TIMEOUT);
+                    straightCount = 1; // 直線走行距離をリセット
+                }
+                break;
+
+            case LOCAL_LEFT:
+                if(slalomEnable){
+                    slalom(FALSE, endSpeed, pFAST_TIMEOUT);
+                }else{
+                    fastStraight(pCELL_DISTANCE * straightCount, 0.0);
+                    turn(M_PI_2, pFAST_TIMEOUT);
+                    straightCount = 1; // 直線走行距離をリセット
+                }
+                break;
+
+            case LOCAL_REAR:
+                fastStraight(pCELL_DISTANCE * straightCount, 0.0);
+                turn(M_PI, pFAST_TIMEOUT);
+                straightCount = 1; // 直線走行距離をリセット
+                break;
+        }
+
+        mypos->dir = glob_nextdir; // 方向を更新
+
+        // 向いた方向によって自分の座標を更新する
+        switch(mypos->dir)
+        {
+            case north:
+                mypos->y++; // 北を向いた時はY座標を増やす
+                break;
+
+            case east:
+                mypos->x++; // 東を向いた時はX座標を増やす
+                break;
+
+            case south:
+                mypos->y--; // 南を向いた時はY座標を減らす
+                break;
+
+            case west:
+                mypos->x--; // 西を向いたときはX座標を減らす
+                break;
+        }
+    }
+    fastStraight(pCELL_DISTANCE * straightCount, 0.0);
+}
+
 
 void search(const int goalX, const int goalY, const int slalomEnable, 
         const int goHomeEnable){
@@ -615,7 +742,7 @@ void search(const int goalX, const int goalY, const int slalomEnable,
 
     searchAdachi(goalX,goalY,slalomEnable,doInitKetsuate,&myPos);
     // loggingSaveWall(WallMap,MAZESIZE_X,MAZESIZE_Y);
-    loggingSaveWall(MAZESIZE_X,MAZESIZE_Y,WallMap);
+    // loggingSaveWall(MAZESIZE_X,MAZESIZE_Y,WallMap);
 
     // ゴールしたらLEDを点灯
     gIndicatorValue = 6;
@@ -639,3 +766,45 @@ void search(const int goalX, const int goalY, const int slalomEnable,
     // ダイアルを初期化
     gObsDial = 0;
 }
+
+
+void run(const int goalX, const int goalY, const int slalomEnable, 
+        const int goHomeEnable){
+
+    int doInitKetsuate = TRUE;
+
+    t_position myPos;
+    myPos.x = myPos.y = 0;
+    myPos.dir = north;
+
+    // LEDを点灯するからこの間に指を離してね
+    gIndicatorValue = 6;
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    gIndicatorValue = 9;
+
+    fastRun(goalX, goalX, slalomEnable, doInitKetsuate, &myPos);
+
+    // ゴールしたらLEDを点灯
+    gIndicatorValue = 6;
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    while(gGyroBiasResetRequest){
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+    gIndicatorValue = 0;
+
+    // スタート地点に戻る
+    if(goHomeEnable){
+        doInitKetsuate = FALSE;
+        fastRun(0, 0, slalomEnable, doInitKetsuate, &myPos);
+    }
+
+    // LEDを点灯するからこの間にEspecialを持ち上げてね
+    gIndicatorValue = 9;
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    gIndicatorValue = 0;
+
+    // ダイアルを初期化
+    gObsDial = 0;
+}
+
+
