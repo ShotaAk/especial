@@ -52,6 +52,16 @@ enum MODE{
     MODE_SELECT
 };
 
+typedef struct
+{
+    unsigned char north:2;	//北の壁情報
+    unsigned char east:2;	//東の壁情報
+    unsigned char south:2;	//南の壁情報
+    unsigned char west:2;	//西の壁情報
+}t_wall;			//壁情報を格納する構造体(ビットフィールド)
+
+typedef unsigned char t_steps;
+
 // -----Especialのモード-----
 extern enum MODE gCurrentMode;
 

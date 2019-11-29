@@ -11,6 +11,7 @@
 #include "variables.h"
 #include "parameters.h"
 #include "controller.h"
+#include "logger.h"
 
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
@@ -31,14 +32,6 @@ static const char *TAG="Maze";
 #define WALL    1 // 壁がある場合の値
 #define VWALL   3 // 仮想壁の値(未使用)
 #define CONV_SEN2WALL(w) ((w) ? WALL : NOWALL)
-
-typedef struct
-{
-    unsigned char north:2;	//北の壁情報
-    unsigned char east:2;	//東の壁情報
-    unsigned char south:2;	//南の壁情報
-    unsigned char west:2;	//西の壁情報
-}t_wall;			//壁情報を格納する構造体(ビットフィールド)
 
 typedef enum
 {
@@ -74,8 +67,6 @@ typedef enum
     PRIORITY_HIGHEST,
 }ENUM_PRIORITY;
 typedef unsigned int t_priority;
-
-typedef unsigned char t_steps;
 
 const unsigned char INIT_STEPS = 255;
 const unsigned char MIN_STEP = 0;
@@ -623,6 +614,8 @@ void search(const int goalX, const int goalY, const int slalomEnable,
     gIndicatorValue = 9;
 
     searchAdachi(goalX,goalY,slalomEnable,doInitKetsuate,&myPos);
+    // loggingSaveWall(WallMap,MAZESIZE_X,MAZESIZE_Y);
+    loggingSaveWall(MAZESIZE_X,MAZESIZE_Y,WallMap);
 
     // ゴールしたらLEDを点灯
     gIndicatorValue = 6;
