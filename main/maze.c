@@ -617,7 +617,7 @@ void fastRun(const int goalX, const int goalY, const int slalomEnable,
         ketsuate(endSpeed);
     }
 
-    int straightCount=0; // 直進区画を連続走行するためのカウンタ
+    float straightCount=0; // 直進区画を連続走行するためのカウンタ
 
     // 現在の向きから、次に行くべき方向を向く
     switch(getNextDirection(goalX,goalY,MASK_SECOND,&glob_nextdir,mypos)) // 次に行く方向を戻り値とする関数を呼ぶ
@@ -676,7 +676,10 @@ void fastRun(const int goalX, const int goalY, const int slalomEnable,
 
             case LOCAL_RIGHT:
                 if(slalomEnable){
-                    slalom(TRUE, endSpeed, pFAST_TIMEOUT);
+                    straightCount -= 0.5; // 半区画分調整
+                    fastStraight(pCELL_DISTANCE * straightCount, endSpeed);
+                    fastSlalom(TRUE, endSpeed, pFAST_TIMEOUT);
+                    straightCount = 0.5; // 半区画分調整
                 }else{
                     fastStraight(pCELL_DISTANCE * straightCount, 0.0);
                     turn(-M_PI_2, pFAST_TIMEOUT);
@@ -686,7 +689,10 @@ void fastRun(const int goalX, const int goalY, const int slalomEnable,
 
             case LOCAL_LEFT:
                 if(slalomEnable){
-                    slalom(FALSE, endSpeed, pFAST_TIMEOUT);
+                    straightCount -= 0.5; // 半区画分調整
+                    fastStraight(pCELL_DISTANCE * straightCount, endSpeed);
+                    fastSlalom(FALSE, endSpeed, pFAST_TIMEOUT);
+                    straightCount = 0.5; // 半区画分調整
                 }else{
                     fastStraight(pCELL_DISTANCE * straightCount, 0.0);
                     turn(M_PI_2, pFAST_TIMEOUT);
@@ -724,6 +730,8 @@ void fastRun(const int goalX, const int goalY, const int slalomEnable,
         }
     }
     fastStraight(pCELL_DISTANCE * straightCount, 0.0);
+
+    gMotorState = MOTOR_OFF;
 }
 
 

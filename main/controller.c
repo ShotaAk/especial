@@ -436,15 +436,12 @@ int turn(const float targetAngle, const float timeout){
     return TRUE;
 }
 
-int slalom(const int isTurnRight, const float endSpeed, const float timeout){
-    // スラロームやりたい
-    const float MAX_OMEGA= 8; // 最大角速度 rad/s
-    const float ACCEL_DECEL = 100; // 50 加減速度 rad/s^2
-    const float START_OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
-    const float STOP_OFFSET_DISTANCE = 0.018; // オフセット直線走行距離 meter
-    const float ACCEL_DECEL_ANGLE = 15.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
-    const float KEEP_OMEGA_ANGLE  = 56.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+int slalomBase(const int isTurnRight, const float endSpeed, const float timeout,
+        const float MAX_OMEGA, const float ACCEL_DECEL,
+        const float START_OFFSET_DISTANCE, const float STOP_OFFSET_DISTANCE,
+        const float ACCEL_DECEL_ANGLE, const float KEEP_OMEGA_ANGLE){
 
+    // スラロームやりたい
     control_t control;
     // 直進速度は一定速
     control.maxSpeed = endSpeed;
@@ -573,6 +570,38 @@ int slalom(const int isTurnRight, const float endSpeed, const float timeout){
     gObsMovingDistance = 0;
 
     return TRUE;
+}
+
+
+int slalom(const int isTurnRight, const float endSpeed, const float timeout){
+    // 探索走行用のスラローム
+    const float MAX_OMEGA= 8; // 最大角速度 rad/s
+    const float ACCEL_DECEL = 100; // 50 加減速度 rad/s^2
+    const float START_OFFSET_DISTANCE = 0.010; // オフセット直線走行距離 meter
+    const float STOP_OFFSET_DISTANCE = 0.018; // オフセット直線走行距離 meter
+    const float ACCEL_DECEL_ANGLE = 15.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 56.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+
+    return slalomBase(isTurnRight, endSpeed, timeout, 
+            MAX_OMEGA, ACCEL_DECEL, 
+            START_OFFSET_DISTANCE, STOP_OFFSET_DISTANCE,
+            ACCEL_DECEL_ANGLE, KEEP_OMEGA_ANGLE);
+}
+
+
+int fastSlalom(const int isTurnRight, const float endSpeed, const float timeout){
+    // 最短走行用のスラローム
+    const float MAX_OMEGA= 15; // 最大角速度 rad/s
+    const float ACCEL_DECEL = 200; // 50 加減速度 rad/s^2
+    const float START_OFFSET_DISTANCE = 0.003; // オフセット直線走行距離 meter
+    const float STOP_OFFSET_DISTANCE = 0.003; // オフセット直線走行距離 meter
+    const float ACCEL_DECEL_ANGLE = 30.0 * M_PI / 180.0; // 25.0 ->  0.436332313; // 加減速角度 rad
+    const float KEEP_OMEGA_ANGLE  = 30.0 * M_PI / 180.0; // 40.0 -> 0.6981317008; // 低速角度 rad
+
+    return slalomBase(isTurnRight, endSpeed, timeout, 
+            MAX_OMEGA, ACCEL_DECEL, 
+            START_OFFSET_DISTANCE, STOP_OFFSET_DISTANCE,
+            ACCEL_DECEL_ANGLE, KEEP_OMEGA_ANGLE);
 }
 
 int straightBack(const float timeout){

@@ -396,7 +396,7 @@ static void TaskMain(void *arg){
                 }
                 case MODE1_FAST_RUN:
                 {
-                    int slalomEnable = FALSE;
+                    int slalomEnable = TRUE;
                     int goHomeEanble = FALSE;
                     ESP_LOGI(TAG, "FAST RUN");
                     run(goalX, goalY, slalomEnable, goHomeEanble);
