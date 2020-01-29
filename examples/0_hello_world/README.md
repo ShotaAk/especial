@@ -1,5 +1,3 @@
-# Hello World Example
+# Hello World
 
-Starts a FreeRTOS task to print "Hello World"
-
-See the README.md file in the upper level 'examples' directory for more information about examples.
+シリアル通信経由でターミナルに文字を出力するサンプル
