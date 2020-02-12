@@ -37,7 +37,6 @@ static const mcpwm_duty_type_t DUTY_MODE = MCPWM_DUTY_MODE_0; // アクティブ
 
 static void drive_forward(mcpwm_timer_t timer_num , float duty)
 {
-    // 正転
     mcpwm_set_signal_low(UNIT, timer_num, OPR_PH);
     mcpwm_set_duty(UNIT, timer_num, OPR_EN, duty);
     // set_signal_low/highを実行した後は、毎回set_duty_typeを実行すること
@@ -46,7 +45,6 @@ static void drive_forward(mcpwm_timer_t timer_num , float duty)
 
 static void drive_backward(mcpwm_timer_t timer_num , float duty)
 {
-    // 逆転
     mcpwm_set_signal_high(UNIT, timer_num, OPR_PH);
     mcpwm_set_duty(UNIT, timer_num, OPR_EN, duty);
     // set_signal_low/highを実行した後は、毎回set_duty_typeを実行すること
@@ -55,14 +53,13 @@ static void drive_backward(mcpwm_timer_t timer_num , float duty)
 
 static void drive_brake(mcpwm_timer_t timer_num)
 {
-    // ブレーキ
     mcpwm_set_signal_low(UNIT, timer_num, OPR_EN);
 }
 
 static void motor_drive(const enum SIDE side, const float duty, const int go_back)
 {
     const float DUTY_MAX = 100;
-    const float DUTY_MIN = 10;
+    const float DUTY_MIN = 5;
 
     float target_duty = duty;
     if(target_duty > DUTY_MAX){
@@ -84,17 +81,11 @@ void app_main()
 {
     // ----- GPIOの設定 -----
     gpio_config_t io_conf;
-    // 割り込みをしない
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    // 出力モード
     io_conf.mode = GPIO_MODE_OUTPUT;
-    // 設定したいピンのビットマスク
     io_conf.pin_bit_mask = (1ULL<<GPIO_NSLEEP);
-    // 内部プルダウンしない
     io_conf.pull_down_en = 0;
-    // 内部プルアップしない
     io_conf.pull_up_en = 0;
-    // 設定をセットする
     gpio_config(&io_conf);
 
     // nSLEEPをONにして、モータの電源OFF
