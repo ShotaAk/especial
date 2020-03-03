@@ -125,7 +125,7 @@ void app_main(){
         .sclk_io_num = GPIO_HSPI_SCLK, // SPI Clockのピン
         .quadwp_io_num = -1, // Quad SPIのWPピン。使わないので-1をセット。
         .quadhd_io_num = -1, // Quad SPIのHDピン。使わないので-1をセット。
-        .max_transfer_sz = 4, // 最大送信バイト数。
+        .max_transfer_sz = 2, // 最大送信バイト数。
         // flags: SPICOMMON_BUSFLAG_で始まるフラグをセットできる
         .flags = SPICOMMON_BUSFLAG_MASTER | SPICOMMON_BUSFLAG_NATIVE_PINS,
         // .intr_flags = NULL, // 割り込みの優先順位フラグ
@@ -177,8 +177,8 @@ void app_main(){
     uint8_t reg_value;
     // MA702レジスタへの書き込みは1000回までなので、
     // 1回書き込んだらwriteRegister関数をコメントアウトすること
-    reg_value = writeRegister(spidev[LEFT], address, data);
-    printf("write: side:%d, address:%x, value:%x\n", LEFT, address, reg_value);
+    // reg_value = writeRegister(spidev[LEFT], address, data);
+    // printf("write: side:%d, address:%x, value:%x\n", LEFT, address, reg_value);
     // 書き込まれているか確認
     reg_value = readRegister(spidev[LEFT], address);
     printf("read: side:%d, address:%x, value:%x\n", LEFT, address, reg_value);
