@@ -4,19 +4,18 @@
 // Ref: https://invensense.tdk.com/wp-content/uploads/2017/07/DS-000179-ICM-20648-v1.2-TYP.pdf
 
 #include "icm20648.h"
-
 #include <cstring>
 #include <driver/spi_master.h>
 #include <esp_intr_alloc.h>
 
-const static uint8_t ADDR_WHO_AM_I = 0x00;
-const size_t DATA_LENGTH = 8;
 
 static spi_device_handle_t spidev_;
 
 uint8_t transaction(const uint8_t cmd, const uint8_t addr, const uint8_t data){
     // ICM-20648と通信するデータ読み込み、書き込み兼用関数
+    const size_t DATA_LENGTH = 8;
     uint8_t recv_data=0;
+
     spi_transaction_t trans;
     memset(&trans, 0, sizeof(trans)); // 構造体をゼロで初期化
     // flags: SPI_TRANS_ではじまるフラグを設定できる
@@ -92,5 +91,6 @@ void ICM20648::init(const int mosi_io_num, const int miso_io_num,
 }
 
 int ICM20648::read_who_am_i(void){
+    const uint8_t ADDR_WHO_AM_I = 0x00;
     return readRegister(ADDR_WHO_AM_I);
 }
