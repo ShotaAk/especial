@@ -1,8 +1,6 @@
 #ifndef ICM20648_H
 #define ICM20648_H
 
-#include <cstdint>
-
 namespace ICM20648
 {
     extern void init(const int mosi_io_num, const int miso_io_num, 
