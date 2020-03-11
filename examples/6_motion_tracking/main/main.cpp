@@ -5,7 +5,6 @@
 #include <iostream>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-
 #include "icm20648.h"
 
 const static gpio_num_t GPIO_MOSI = GPIO_NUM_19;
