@@ -6,7 +6,6 @@
 #include "icm20648.h"
 #include <cstring>
 #include <driver/spi_master.h>
-#include <esp_intr_alloc.h>
 
 
 static spi_device_handle_t spidev_;
