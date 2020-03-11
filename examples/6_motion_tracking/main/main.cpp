@@ -1,3 +1,7 @@
+// C++プロジェクトのサンプル
+// Ref:https://github.com/espressif/esp-idf/tree/release/v3.3/examples/system/cpp_exceptions
+// Ref:https://github.com/espressif/esp-idf/tree/release/v3.3/examples/system/cpp_pthread
+
 #include <iostream>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
