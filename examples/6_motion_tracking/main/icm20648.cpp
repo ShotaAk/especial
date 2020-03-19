@@ -66,6 +66,7 @@ void spidev_init(const int mosi_io_num, const int miso_io_num,
     buscfg.max_transfer_sz = 2; // 最大送信バイト数。
     // flags: SPICOMMON_BUSFLAG_で始まるフラグをセットできる
     buscfg.flags = SPICOMMON_BUSFLAG_MASTER;
+    buscfg.intr_flags = 0; // 割り込みをしない
     ret = spi_bus_initialize(VSPI_HOST, &buscfg, 1);
     ESP_ERROR_CHECK(ret);
     
@@ -105,7 +106,7 @@ void ICM20648::init(const int mosi_io_num, const int miso_io_num,
         const int sclk_io_num, const int cs_io_num){
     // SPIデバイスの初期設定
     spidev_init(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
-    icm20648_init();
+    // icm20648_init();
 }
 
 int ICM20648::read_who_am_i(void){
