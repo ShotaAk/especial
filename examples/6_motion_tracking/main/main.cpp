@@ -19,6 +19,7 @@ extern "C" void app_main(){
 
     while(1){
         std::cout<< "WHO AM I:" <<std::hex<<ICM20648::read_who_am_i()<<std::endl;
+
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

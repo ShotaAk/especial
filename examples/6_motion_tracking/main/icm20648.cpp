@@ -4,13 +4,12 @@
 // Ref: https://invensense.tdk.com/wp-content/uploads/2017/07/DS-000179-ICM-20648-v1.2-TYP.pdf
 
 #include "icm20648.h"
-#include <cstring>
 #include <driver/spi_master.h>
-
+#include <cstring>
 
 static spi_device_handle_t spidev_;
 
-uint8_t transaction(const uint8_t cmd, const uint8_t addr, const uint8_t data){
+uint8_t transaction(const uint8_t cmd, const uint8_t addr, const uint8_t data=0x00){
     // ICM-20648と通信するデータ読み込み、書き込み兼用関数
     const size_t DATA_LENGTH = 8;
     uint8_t recv_data=0;
@@ -45,7 +44,16 @@ uint8_t readRegister(const uint8_t address){
     return raw_data;
 }
 
-void ICM20648::init(const int mosi_io_num, const int miso_io_num, 
+uint8_t writeRegister(const uint8_t address, const uint8_t data){
+    // レジスタにデータを書き込む
+    const uint8_t WRITE_COMMAND = 0;
+    uint8_t raw_data = transaction(WRITE_COMMAND, address, data);
+
+    return raw_data;
+}
+
+
+void spidev_init(const int mosi_io_num, const int miso_io_num, 
         const int sclk_io_num, const int cs_io_num){
     esp_err_t ret;
     // SPIバスの設定
@@ -89,7 +97,28 @@ void ICM20648::init(const int mosi_io_num, const int miso_io_num,
     ESP_ERROR_CHECK(ret);
 }
 
+void icm20648_init(void){
+    // ICM20648の初期設定
+}
+
+void ICM20648::init(const int mosi_io_num, const int miso_io_num, 
+        const int sclk_io_num, const int cs_io_num){
+    // SPIデバイスの初期設定
+    spidev_init(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
+    icm20648_init();
+}
+
 int ICM20648::read_who_am_i(void){
     const uint8_t ADDR_WHO_AM_I = 0x00;
     return readRegister(ADDR_WHO_AM_I);
+}
+
+int ICM20648::read_accel_x(void){
+    const uint8_t ADDR_ACCEL_X_H = 0x2d;
+    const uint8_t ADDR_ACCEL_X_L = 0x2e;
+
+    uint8_t accel_h = readRegister(ADDR_ACCEL_X_H);
+    uint8_t accel_l = readRegister(ADDR_ACCEL_X_L);
+
+    return accel_h << 8 | accel_l;
 }
