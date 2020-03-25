@@ -15,10 +15,10 @@ const static gpio_num_t GPIO_CS = GPIO_NUM_5;
 /* Inside .cpp file, app_main function must be declared with C linkage */
 extern "C" void app_main(){
 
-    ICM20648::init(GPIO_MOSI, GPIO_MISO, GPIO_SCLK, GPIO_CS);
+    icm20648 driver(GPIO_MOSI, GPIO_MISO, GPIO_SCLK, GPIO_CS);
 
     while(1){
-        std::cout<< "WHO AM I:" <<std::hex<<ICM20648::read_who_am_i()<<std::endl;
+        std::cout<< "WHO AM I:" <<std::hex<<driver.readWhoAmI()<<std::endl;
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

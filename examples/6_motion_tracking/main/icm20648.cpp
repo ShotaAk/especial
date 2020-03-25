@@ -4,18 +4,16 @@
 // Ref: https://invensense.tdk.com/wp-content/uploads/2017/07/DS-000179-ICM-20648-v1.2-TYP.pdf
 
 #include "icm20648.h"
-#include <driver/spi_master.h>
 #include <cstring>
 
-static spi_device_handle_t spidev_;
-
-uint8_t transaction(const uint8_t cmd, const uint8_t addr, const uint8_t data=0x00){
+uint8_t icm20648::transaction(const uint8_t cmd, const uint8_t addr,
+        const uint8_t data = 0x00) {
     // ICM-20648と通信するデータ読み込み、書き込み兼用関数
     const size_t DATA_LENGTH = 8;
-    uint8_t recv_data=0;
+    uint8_t recv_data = 0;
 
     spi_transaction_t trans;
-    memset(&trans, 0, sizeof(trans)); // 構造体をゼロで初期化
+    memset(&trans, 0, sizeof(trans));  // 構造体をゼロで初期化
     // flags: SPI_TRANS_ではじまるフラグを設定できる
     // trans.flags = SPI_TRANS_USE_RXDATA;
     trans.cmd = cmd;
@@ -30,13 +28,13 @@ uint8_t transaction(const uint8_t cmd, const uint8_t addr, const uint8_t data=0x
     
     // 通信開始
     esp_err_t ret;
-    ret=spi_device_polling_transmit(spidev_, &trans);
+    ret=spi_device_polling_transmit(mHandler, &trans);
     assert(ret==ESP_OK);
     
     return recv_data;
 }
 
-uint8_t readRegister(const uint8_t address){
+uint8_t icm20648::readRegister(const uint8_t address){
     // レジスタデータを読み取る
     const uint8_t READ_COMMAND = 1;
     uint8_t raw_data = transaction(READ_COMMAND, address, 0x00);
@@ -44,7 +42,7 @@ uint8_t readRegister(const uint8_t address){
     return raw_data;
 }
 
-uint8_t writeRegister(const uint8_t address, const uint8_t data){
+uint8_t icm20648::writeRegister(const uint8_t address, const uint8_t data){
     // レジスタにデータを書き込む
     const uint8_t WRITE_COMMAND = 0;
     uint8_t raw_data = transaction(WRITE_COMMAND, address, data);
@@ -52,8 +50,20 @@ uint8_t writeRegister(const uint8_t address, const uint8_t data){
     return raw_data;
 }
 
+bool icm20648::changeUserBank(const uint8_t bank){
+    // レジスタのユーザバンクを切り替える
+    const uint8_t ADDR_REG_BANK_SEL = 0x7f;
+    const uint8_t BANK_MAX = 3;
 
-void spidev_init(const int mosi_io_num, const int miso_io_num, 
+    if(bank > BANK_MAX){
+        return false;
+    }
+    writeRegister(ADDR_REG_BANK_SEL, bank);
+
+    return true;
+}
+
+void icm20648::spidevInit(const int mosi_io_num, const int miso_io_num, 
         const int sclk_io_num, const int cs_io_num){
     esp_err_t ret;
     // SPIバスの設定
@@ -94,32 +104,45 @@ void spidev_init(const int mosi_io_num, const int miso_io_num,
     
     // デバイス設定のCSピンだけ書き換える
     devcfg.spics_io_num = cs_io_num;
-    ret = spi_bus_add_device(VSPI_HOST, &devcfg, &spidev_);
+    ret = spi_bus_add_device(VSPI_HOST, &devcfg, &mHandler);
     ESP_ERROR_CHECK(ret);
 }
 
-void icm20648_init(void){
-    // ICM20648の初期設定
+icm20648::icm20648(const int mosi_io_num, const int miso_io_num, 
+    const int sclk_io_num, const int cs_io_num){
+
+    spidevInit(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
 }
 
-void ICM20648::init(const int mosi_io_num, const int miso_io_num, 
-        const int sclk_io_num, const int cs_io_num){
-    // SPIデバイスの初期設定
-    spidev_init(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
-    // icm20648_init();
-}
-
-int ICM20648::read_who_am_i(void){
+int icm20648::readWhoAmI(void){
     const uint8_t ADDR_WHO_AM_I = 0x00;
     return readRegister(ADDR_WHO_AM_I);
 }
 
-int ICM20648::read_accel_x(void){
-    const uint8_t ADDR_ACCEL_X_H = 0x2d;
-    const uint8_t ADDR_ACCEL_X_L = 0x2e;
+void icm20648::writePwrMgmt(pwr_mgmt_t *mgmt){
+    const uint8_t ADDR_PWR_MGMT_1 = 0x06;
+    const uint8_t ADDR_PWR_MGMT_2 = 0x07;
+    const uint8_t CLOCK_SOURCE_MAX = 7;
+    const uint8_t DISABLE_ACCEL_GYRO_MAX = 7;
 
-    uint8_t accel_h = readRegister(ADDR_ACCEL_X_H);
-    uint8_t accel_l = readRegister(ADDR_ACCEL_X_L);
+    uint8_t data = 0;
+    data |= mgmt->reset_device << 7;
+    data |= mgmt->enable_sleep_mode << 6;
+    data |= mgmt->enable_low_power << 5;
+    data |= mgmt->disable_temp_sensor << 3;
 
-    return accel_h << 8 | accel_l;
+    if(mgmt->clock_source <= CLOCK_SOURCE_MAX){
+        data |= uint8_t(mgmt->clock_source);
+    }
+    writeRegister(ADDR_PWR_MGMT_1, data);
+
+    data = 0;
+
+    if(mgmt->disable_accel <= DISABLE_ACCEL_GYRO_MAX){
+        data |= uint8_t(mgmt->disable_accel) << 3;
+    }
+    if(mgmt->disable_gyro <= DISABLE_ACCEL_GYRO_MAX){
+        data |= uint8_t(mgmt->disable_gyro);
+    }
+    writeRegister(ADDR_PWR_MGMT_2, data);
 }
