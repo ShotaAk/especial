@@ -6,6 +6,14 @@
 #include "icm20648.h"
 #include <cstring>
 
+const int icm20648::FS_SEL_SIZE = 4;
+const float icm20648::GYRO_SENSITIVITY[icm20648::FS_SEL_SIZE] = {
+    131, 65.5, 32.8, 16.4
+};
+const float icm20648::ACCEL_SENSITIVITY[icm20648::FS_SEL_SIZE] = {
+    16384, 8192, 4096, 2048
+};
+
 uint8_t icm20648::transaction(const uint8_t cmd, const uint8_t addr,
         const uint8_t data = 0x00) {
     // ICM-20648と通信するデータ読み込み、書き込み兼用関数
@@ -42,10 +50,20 @@ uint8_t icm20648::readRegister(const uint8_t address){
     return raw_data;
 }
 
+uint16_t icm20648::readRegister2Byte(const uint8_t addrHigh,
+    const uint8_t addrLow){
+
+    uint8_t highData = readRegister(addrHigh);
+    uint8_t lowData  = readRegister(addrLow);
+
+    return highData << 8 | lowData;
+}
+
 uint8_t icm20648::writeRegister(const uint8_t address, const uint8_t data){
     // レジスタにデータを書き込む
     const uint8_t WRITE_COMMAND = 0;
     uint8_t raw_data = transaction(WRITE_COMMAND, address, data);
+    ets_delay_us(100);
 
     return raw_data;
 }
@@ -108,10 +126,61 @@ void icm20648::spidevInit(const int mosi_io_num, const int miso_io_num,
     ESP_ERROR_CHECK(ret);
 }
 
+bool icm20648::writeGyroConfig(const uint8_t fssel,
+    const bool enableLPF=false, const uint8_t configLPF=0){
+
+    const uint8_t ADDR_GYRO_CONFIG_1 = 0x01;
+    const uint8_t LPFCFG_MAX = 7;
+
+    if(fssel >= FS_SEL_SIZE || configLPF > LPFCFG_MAX){
+        return false;
+    }
+
+    uint8_t data=0;
+    data |= configLPF << 3;
+    data |= fssel << 1; 
+    data |= enableLPF;
+
+    changeUserBank(2);
+    writeRegister(ADDR_GYRO_CONFIG_1, data);
+    changeUserBank(0);
+
+    return true;
+}
+
+float icm20648::getGyro(const AXIS axis){
+    const uint8_t ADDR_GYRO_OUT_H[AXIS_SIZE] = {0x33, 0x35, 0x37};
+    const uint8_t ADDR_GYRO_OUT_L[AXIS_SIZE] = {0x34, 0x36, 0x38};
+
+    uint16_t rawData = readRegister2Byte(
+        ADDR_GYRO_OUT_H[axis], 
+        ADDR_GYRO_OUT_L[axis]
+        );
+
+    return float(rawData) / GYRO_SENSITIVITY[mGyroFSSel];
+}
+
 icm20648::icm20648(const int mosi_io_num, const int miso_io_num, 
     const int sclk_io_num, const int cs_io_num){
 
     spidevInit(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
+
+    pwr_mgmt_t mgmt;
+    mgmt.reset_device = true;
+    mgmt.enable_sleep_mode = false;
+    mgmt.enable_low_power = false;
+    mgmt.disable_temp_sensor = false;
+    mgmt.clock_source = 1;  // auto select
+    mgmt.disable_accel = 0b111;  // disable all
+    mgmt.disable_gyro = 0b111;  // disable all
+    // writePwrMgmt(&mgmt);
+
+    // writeGyroConfig(3, false, 0);
+
+    mgmt.reset_device =false;
+    mgmt.disable_accel = 0b000;  // enable all
+    mgmt.disable_gyro = 0b000;  // enable all
+    // writePwrMgmt(&mgmt);
 }
 
 int icm20648::readWhoAmI(void){
@@ -145,4 +214,16 @@ void icm20648::writePwrMgmt(pwr_mgmt_t *mgmt){
         data |= uint8_t(mgmt->disable_gyro);
     }
     writeRegister(ADDR_PWR_MGMT_2, data);
+}
+
+float icm20648::getGyroX(void){
+    return getGyro(AXIS_X);
+}
+
+float icm20648::getGyroY(void){
+    return getGyro(AXIS_Y);
+}
+
+float icm20648::getGyroZ(void){
+    return getGyro(AXIS_Z);
 }

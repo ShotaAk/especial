@@ -17,9 +17,12 @@ extern "C" void app_main(){
 
     icm20648 driver(GPIO_MOSI, GPIO_MISO, GPIO_SCLK, GPIO_CS);
 
+    std::cout<< "WHO AM I:" <<std::hex<<driver.readWhoAmI()<<std::endl;
     while(1){
-        std::cout<< "WHO AM I:" <<std::hex<<driver.readWhoAmI()<<std::endl;
+        std::cout << "GyroX:" << driver.getGyroX()<<std::endl;
+        std::cout << "GyroY:" << driver.getGyroY()<<std::endl;
+        std::cout << "GyroZ:" << driver.getGyroZ()<<std::endl;
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
