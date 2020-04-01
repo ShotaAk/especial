@@ -5,6 +5,11 @@
 
 #include "icm20648.h"
 #include <cstring>
+#include <freertos/task.h>
+
+#define LOG_LOCAL_LEVEL ESP_LOG_INFO
+#include "esp_log.h"
+static const char *TAG="Motion";
 
 const int icm20648::FS_SEL_SIZE = 4;
 const float icm20648::GYRO_SENSITIVITY[icm20648::FS_SEL_SIZE] = {
@@ -62,8 +67,10 @@ uint16_t icm20648::readRegister2Byte(const uint8_t addrHigh,
 uint8_t icm20648::writeRegister(const uint8_t address, const uint8_t data){
     // レジスタにデータを書き込む
     const uint8_t WRITE_COMMAND = 0;
+
+    ESP_LOGD(TAG, "Write Register addr: %x, data :%x\n", int(address), int(data));
+    vTaskDelay(10 / portTICK_PERIOD_MS);  // 書き込み前にディレイを入れないと動かない
     uint8_t raw_data = transaction(WRITE_COMMAND, address, data);
-    ets_delay_us(100);
 
     return raw_data;
 }
@@ -173,14 +180,15 @@ icm20648::icm20648(const int mosi_io_num, const int miso_io_num,
     mgmt.clock_source = 1;  // auto select
     mgmt.disable_accel = 0b111;  // disable all
     mgmt.disable_gyro = 0b111;  // disable all
-    // writePwrMgmt(&mgmt);
+    writePwrMgmt(&mgmt);
 
     // writeGyroConfig(3, false, 0);
+
 
     mgmt.reset_device =false;
     mgmt.disable_accel = 0b000;  // enable all
     mgmt.disable_gyro = 0b000;  // enable all
-    // writePwrMgmt(&mgmt);
+    writePwrMgmt(&mgmt);
 }
 
 int icm20648::readWhoAmI(void){

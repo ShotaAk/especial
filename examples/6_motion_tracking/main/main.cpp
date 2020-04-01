@@ -23,6 +23,6 @@ extern "C" void app_main(){
         std::cout << "GyroY:" << driver.getGyroY()<<std::endl;
         std::cout << "GyroZ:" << driver.getGyroZ()<<std::endl;
 
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
