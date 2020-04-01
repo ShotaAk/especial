@@ -159,7 +159,8 @@ float icm20648::getGyro(const AXIS axis){
     const uint8_t ADDR_GYRO_OUT_H[AXIS_SIZE] = {0x33, 0x35, 0x37};
     const uint8_t ADDR_GYRO_OUT_L[AXIS_SIZE] = {0x34, 0x36, 0x38};
 
-    uint16_t rawData = readRegister2Byte(
+    // 符号をつけるため、int16_t型の変数に格納する
+    int16_t rawData = readRegister2Byte(
         ADDR_GYRO_OUT_H[axis], 
         ADDR_GYRO_OUT_L[axis]
         );
@@ -182,8 +183,7 @@ icm20648::icm20648(const int mosi_io_num, const int miso_io_num,
     mgmt.disable_gyro = 0b111;  // disable all
     writePwrMgmt(&mgmt);
 
-    // writeGyroConfig(3, false, 0);
-
+    writeGyroConfig(3, false, 0);
 
     mgmt.reset_device =false;
     mgmt.disable_accel = 0b000;  // enable all
