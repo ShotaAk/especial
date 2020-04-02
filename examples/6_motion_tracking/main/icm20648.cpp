@@ -7,6 +7,7 @@
 #include <cstring>
 #include <freertos/task.h>
 
+// ログレベルをESP_LOG_DEBUGにすると、デバッグメッセージが表示される
 #define LOG_LOCAL_LEVEL ESP_LOG_INFO
 #include "esp_log.h"
 static const char *TAG="Motion";
@@ -68,7 +69,7 @@ uint8_t icm20648::writeRegister(const uint8_t address, const uint8_t data){
     // レジスタにデータを書き込む
     const uint8_t WRITE_COMMAND = 0;
 
-    ESP_LOGD(TAG, "Write Register addr: %x, data :%x\n", int(address), int(data));
+    ESP_LOGD(TAG, "Write Register addr: %x, data :%x", int(address), int(data));
     vTaskDelay(10 / portTICK_PERIOD_MS);  // 書き込み前にディレイを入れないと動かない
     uint8_t raw_data = transaction(WRITE_COMMAND, address, data);
 
@@ -83,7 +84,10 @@ bool icm20648::changeUserBank(const uint8_t bank){
     if(bank > BANK_MAX){
         return false;
     }
-    writeRegister(ADDR_REG_BANK_SEL, bank);
+
+    uint8_t data = bank<<4;
+    writeRegister(ADDR_REG_BANK_SEL, data);
+    ESP_LOGD(TAG, "Read REG_BANK_SEL:%x", int(readRegister(ADDR_REG_BANK_SEL)));
 
     return true;
 }
@@ -133,10 +137,38 @@ void icm20648::spidevInit(const int mosi_io_num, const int miso_io_num,
     ESP_ERROR_CHECK(ret);
 }
 
-bool icm20648::writeGyroConfig(const uint8_t fssel,
-    const bool enableLPF=false, const uint8_t configLPF=0){
+void icm20648::writePwrMgmt(pwr_mgmt_t *mgmt){
+    const uint8_t ADDR_PWR_MGMT_1 = 0x06;
+    const uint8_t ADDR_PWR_MGMT_2 = 0x07;
+    const uint8_t CLOCK_SOURCE_MAX = 7;
+    const uint8_t DISABLE_ACCEL_GYRO_MAX = 7;
 
-    const uint8_t ADDR_GYRO_CONFIG_1 = 0x01;
+    uint8_t data = 0;
+    data |= mgmt->reset_device << 7;
+    data |= mgmt->enable_sleep_mode << 6;
+    data |= mgmt->enable_low_power << 5;
+    data |= mgmt->disable_temp_sensor << 3;
+
+    if(mgmt->clock_source <= CLOCK_SOURCE_MAX){
+        data |= uint8_t(mgmt->clock_source);
+    }
+    writeRegister(ADDR_PWR_MGMT_1, data);
+    ESP_LOGD(TAG, "Read PWR_MGMT_1:%x", int(readRegister(ADDR_PWR_MGMT_1)));
+
+    data = 0;
+
+    if(mgmt->disable_accel <= DISABLE_ACCEL_GYRO_MAX){
+        data |= uint8_t(mgmt->disable_accel) << 3;
+    }
+    if(mgmt->disable_gyro <= DISABLE_ACCEL_GYRO_MAX){
+        data |= uint8_t(mgmt->disable_gyro);
+    }
+    writeRegister(ADDR_PWR_MGMT_2, data);
+    ESP_LOGD(TAG, "Read PWR_MGMT_2:%x", int(readRegister(ADDR_PWR_MGMT_2)));
+}
+
+bool icm20648::writeAccelGyroConfig(const uint8_t addr,
+    const uint8_t fssel, const bool enableLPF, const uint8_t configLPF){
     const uint8_t LPFCFG_MAX = 7;
 
     if(fssel >= FS_SEL_SIZE || configLPF > LPFCFG_MAX){
@@ -149,10 +181,57 @@ bool icm20648::writeGyroConfig(const uint8_t fssel,
     data |= enableLPF;
 
     changeUserBank(2);
-    writeRegister(ADDR_GYRO_CONFIG_1, data);
+    writeRegister(addr, data);
+    // 設定が変更されたか確認
+    ESP_LOGD(TAG, "Read accel gyro config. addr:%x, data:%x", int(addr), int(readRegister(addr)));
     changeUserBank(0);
 
     return true;
+}
+
+bool icm20648::writeAccelConfig(const uint8_t fssel,
+    const bool enableLPF=false, const uint8_t configLPF=0){
+    const uint8_t ADDR_ACCEL_CONFIG_1 = 0x14;
+
+    if (writeAccelGyroConfig(ADDR_ACCEL_CONFIG_1,
+        fssel, enableLPF, configLPF)){
+        mAccelFSSel = fssel;
+        return true;
+    }else{
+        ESP_LOGE(TAG, "writeAccelConfig failed.\
+            fssel:%x, enableLPF:%x, configLPF:%x",
+            int(fssel), int(enableLPF), int(configLPF));
+        return false;
+    }
+}
+
+bool icm20648::writeGyroConfig(const uint8_t fssel,
+    const bool enableLPF=false, const uint8_t configLPF=0){
+    const uint8_t ADDR_GYRO_CONFIG_1 = 0x01;
+
+    if (writeAccelGyroConfig(ADDR_GYRO_CONFIG_1,
+        fssel, enableLPF, configLPF)){
+        mGyroFSSel = fssel;
+        return true;
+    }else{
+        ESP_LOGE(TAG, "writeGyroConfig failed.\
+            fssel:%x, enableLPF:%x, configLPF:%x",
+            int(fssel), int(enableLPF), int(configLPF));
+        return false;
+    }
+}
+
+float icm20648::getAccel(const AXIS axis){
+    const uint8_t ADDR_ACCEL_OUT_H[AXIS_SIZE] = {0x2d, 0x2f, 0x31};
+    const uint8_t ADDR_ACCEL_OUT_L[AXIS_SIZE] = {0x2e, 0x30, 0x32};
+
+    // 符号をつけるため、int16_t型の変数に格納する
+    int16_t rawData = readRegister2Byte(
+        ADDR_ACCEL_OUT_H[axis], 
+        ADDR_ACCEL_OUT_L[axis]
+        );
+
+    return float(rawData) / ACCEL_SENSITIVITY[mAccelFSSel];
 }
 
 float icm20648::getGyro(const AXIS axis){
@@ -174,7 +253,11 @@ icm20648::icm20648(const int mosi_io_num, const int miso_io_num,
     spidevInit(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
 
     pwr_mgmt_t mgmt;
+    // 設定を初期化
     mgmt.reset_device = true;
+    writePwrMgmt(&mgmt);
+
+    mgmt.reset_device =false;
     mgmt.enable_sleep_mode = false;
     mgmt.enable_low_power = false;
     mgmt.disable_temp_sensor = false;
@@ -183,9 +266,9 @@ icm20648::icm20648(const int mosi_io_num, const int miso_io_num,
     mgmt.disable_gyro = 0b111;  // disable all
     writePwrMgmt(&mgmt);
 
-    writeGyroConfig(3, false, 0);
+    writeAccelConfig(1, false, 0);
+    writeGyroConfig(0, false, 0);
 
-    mgmt.reset_device =false;
     mgmt.disable_accel = 0b000;  // enable all
     mgmt.disable_gyro = 0b000;  // enable all
     writePwrMgmt(&mgmt);
@@ -196,32 +279,16 @@ int icm20648::readWhoAmI(void){
     return readRegister(ADDR_WHO_AM_I);
 }
 
-void icm20648::writePwrMgmt(pwr_mgmt_t *mgmt){
-    const uint8_t ADDR_PWR_MGMT_1 = 0x06;
-    const uint8_t ADDR_PWR_MGMT_2 = 0x07;
-    const uint8_t CLOCK_SOURCE_MAX = 7;
-    const uint8_t DISABLE_ACCEL_GYRO_MAX = 7;
+float icm20648::getAccelX(void){
+    return getAccel(AXIS_X);
+}
 
-    uint8_t data = 0;
-    data |= mgmt->reset_device << 7;
-    data |= mgmt->enable_sleep_mode << 6;
-    data |= mgmt->enable_low_power << 5;
-    data |= mgmt->disable_temp_sensor << 3;
+float icm20648::getAccelY(void){
+    return getAccel(AXIS_Y);
+}
 
-    if(mgmt->clock_source <= CLOCK_SOURCE_MAX){
-        data |= uint8_t(mgmt->clock_source);
-    }
-    writeRegister(ADDR_PWR_MGMT_1, data);
-
-    data = 0;
-
-    if(mgmt->disable_accel <= DISABLE_ACCEL_GYRO_MAX){
-        data |= uint8_t(mgmt->disable_accel) << 3;
-    }
-    if(mgmt->disable_gyro <= DISABLE_ACCEL_GYRO_MAX){
-        data |= uint8_t(mgmt->disable_gyro);
-    }
-    writeRegister(ADDR_PWR_MGMT_2, data);
+float icm20648::getAccelZ(void){
+    return getAccel(AXIS_Z);
 }
 
 float icm20648::getGyroX(void){

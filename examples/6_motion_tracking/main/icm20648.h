@@ -29,12 +29,19 @@ class icm20648{
     bool changeUserBank(const uint8_t bank);
     void spidevInit(const int mosi_io_num, const int miso_io_num,
         const int sclk_io_num, const int cs_io_num);
+    void writePwrMgmt(pwr_mgmt_t *mgmt);
+    bool writeAccelGyroConfig(const uint8_t addr, const uint8_t fssel,
+        const bool enableLPF, const uint8_t configLPF);
+    bool writeAccelConfig(const uint8_t fssel,
+        const bool enableLPF, const uint8_t configLPF);
     bool writeGyroConfig(const uint8_t fssel,
         const bool enableLPF, const uint8_t configLPF);
+    float getAccel(const AXIS axis);
     float getGyro(const AXIS axis);
     
     spi_device_handle_t mHandler;
     uint8_t mGyroFSSel;
+    uint8_t mAccelFSSel;
 
     const static int FS_SEL_SIZE;
     const static float GYRO_SENSITIVITY[];
@@ -45,7 +52,9 @@ public:
         const int sclk_io_num, const int cs_io_num);
     ~icm20648(){}
     int readWhoAmI(void);
-    void writePwrMgmt(pwr_mgmt_t *mgmt);
+    float getAccelX(void);
+    float getAccelY(void);
+    float getAccelZ(void);
     float getGyroX(void);
     float getGyroY(void);
     float getGyroZ(void);
