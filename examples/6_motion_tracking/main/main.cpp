@@ -3,6 +3,7 @@
 // Ref:https://github.com/espressif/esp-idf/tree/release/v3.3/examples/system/cpp_pthread
 
 #include <iostream>
+#include <iomanip>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include "icm20648.h"
@@ -20,12 +21,15 @@ extern "C" void app_main(){
     std::cout<< "WHO AM I:" << std::hex << driver.readWhoAmI() << std::endl;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     while(1){
-        std::cout << "AccelX:" << driver.getAccelX() << "g" << std::endl;
-        std::cout << "AccelY:" << driver.getAccelY() << "g" << std::endl;
-        std::cout << "AccelZ:" << driver.getAccelZ() << "g" << std::endl;
-        // std::cout << "GyroX:" << driver.getGyroX()<< "dps" << std::endl;
-        // std::cout << "GyroY:" << driver.getGyroY()<< "dps" << std::endl;
-        // std::cout << "GyroZ:" << driver.getGyroZ()<< "dps" << std::endl;
+        // std::cout << std::setw(12) << std::left << driver.getAccelX() << ",";
+        // std::cout << std::setw(12) << std::left << driver.getAccelY() << ",";
+        // std::cout << std::setw(12) << std::left << driver.getAccelZ() << ",";
+        // std::cout << std::endl;
+
+        std::cout << std::setw(12) << std::left << driver.getGyroX() << ",";
+        std::cout << std::setw(12) << std::left << driver.getGyroY() << ",";
+        std::cout << std::setw(12) << std::left << driver.getGyroZ() << ",";
+        std::cout << std::endl;
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
