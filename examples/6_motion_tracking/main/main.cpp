@@ -21,15 +21,15 @@ extern "C" void app_main(){
     std::cout<< "WHO AM I:" << std::hex << driver.readWhoAmI() << std::endl;
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     while(1){
-        // std::cout << std::setw(12) << std::left << driver.getAccelX() << ",";
-        // std::cout << std::setw(12) << std::left << driver.getAccelY() << ",";
-        // std::cout << std::setw(12) << std::left << driver.getAccelZ() << ",";
-        // std::cout << std::endl;
-
-        std::cout << std::setw(12) << std::left << driver.getGyroX() << ",";
-        std::cout << std::setw(12) << std::left << driver.getGyroY() << ",";
-        std::cout << std::setw(12) << std::left << driver.getGyroZ() << ",";
+        std::cout << std::setw(12) << std::left << driver.getAccelX() << ",";
+        std::cout << std::setw(12) << std::left << driver.getAccelY() << ",";
+        std::cout << std::setw(12) << std::left << driver.getAccelZ() << ",";
         std::cout << std::endl;
+
+        // std::cout << std::setw(12) << std::left << driver.getGyroX() << ",";
+        // std::cout << std::setw(12) << std::left << driver.getGyroY() << ",";
+        // std::cout << std::setw(12) << std::left << driver.getGyroZ() << ",";
+        // std::cout << std::endl;
 
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
