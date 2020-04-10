@@ -4,23 +4,24 @@
 #include <cstdint>
 #include <driver/spi_master.h>
 
-struct pwr_mgmt_t{
-    bool reset_device = false;
-    bool enable_sleep_mode = false;
-    bool enable_low_power = false;
-    bool disable_temp_sensor = false;
-    unsigned int clock_source = 0;
-    unsigned int disable_accel = 0;
-    unsigned int disable_gyro = 0;
-};
-
-enum AXIS{
-    AXIS_X = 0,
-    AXIS_Y,
-    AXIS_Z,
-    AXIS_SIZE
-};
 class icm20648{
+    struct pwr_mgmt_t{
+        bool reset_device = false;
+        bool enable_sleep_mode = false;
+        bool enable_low_power = false;
+        bool disable_temp_sensor = false;
+        unsigned int clock_source = 0;
+        unsigned int disable_accel = 0;
+        unsigned int disable_gyro = 0;
+    };
+
+    enum AXIS{
+        AXIS_X = 0,
+        AXIS_Y,
+        AXIS_Z,
+        AXIS_SIZE
+    };
+
     uint8_t transaction(const uint8_t cmd, const uint8_t addr,
         const uint8_t data);
     uint8_t readRegister(const uint8_t address);
