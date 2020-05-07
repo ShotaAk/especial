@@ -4,7 +4,7 @@
 <!-- PR作成時にチェックボックスにチェックを入れてください -->
 
 - [ ] <!-- コントリビューティングガイドラインを読みました--> I have read the [CONTRIBUTING](../CONTRIBUTING.md) document.
-- [ ] <!-- 同じ変更を要求するオープンなPRが無いことを確認しました --> I have checked to ensure there aren't other open [Pull Requests](../../../pulls) for the same change.
+- [ ] <!-- 同じ変更を要求するオープンなPRが無いことを確認しました --> I have checked to ensure there aren't other open [Pull Requests](../pulls) for the same change.
 
 # What does this implement/fix? Explain your changes.
 <!-- このPRはどんな機能改善/修正ですか？ -->
