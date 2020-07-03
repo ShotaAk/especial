@@ -47,3 +47,5 @@ make flash
 
 [ここ見て](https://github.com/ShotaAk/especial/issues)
 
+# その他
+**Especialと全く同じ**マイクロマウスが[こちらのブログ](https://rt-net.jp/mobility/archives/category/original/shota-originalmouse)で紹介されているようです。
