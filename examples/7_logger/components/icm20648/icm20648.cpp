@@ -248,7 +248,8 @@ float icm20648::getGyro(const AXIS axis){
 }
 
 icm20648::icm20648(const int mosi_io_num, const int miso_io_num, 
-    const int sclk_io_num, const int cs_io_num){
+    const int sclk_io_num, const int cs_io_num,
+    const unsigned int accel_fssel, const unsigned int gyro_fssel){
 
     spidevInit(mosi_io_num, miso_io_num, sclk_io_num, cs_io_num);
 
@@ -266,8 +267,8 @@ icm20648::icm20648(const int mosi_io_num, const int miso_io_num,
     mgmt.disable_gyro = 0b111;  // disable all
     writePwrMgmt(&mgmt);
 
-    writeAccelConfig(1, false, 0);
-    writeGyroConfig(0, false, 0);
+    writeAccelConfig(accel_fssel, false, 0);
+    writeGyroConfig(gyro_fssel, false, 0);
 
     mgmt.disable_accel = 0b000;  // enable all
     mgmt.disable_gyro = 0b000;  // enable all

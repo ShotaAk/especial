@@ -50,7 +50,8 @@ class icm20648{
 
 public:
     icm20648(const int mosi_io_num, const int miso_io_num, 
-        const int sclk_io_num, const int cs_io_num);
+        const int sclk_io_num, const int cs_io_num,
+        const unsigned int accel_fssel, const unsigned int gyro_fssel);
     ~icm20648(){}
     int readWhoAmI(void);
     float getAccelX(void);
